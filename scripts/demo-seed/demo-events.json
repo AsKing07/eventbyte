@@ -1,0 +1,116 @@
+[
+  {
+    "title": "Nuit Jazz au Sunset",
+    "description": "Trio jazz manouche et standards de Django Reinhardt dans un club mythique des Halles.",
+    "startAt": "2026-12-04T20:30:00+01:00",
+    "venue": { "name": "Sunset-Sunside", "adress": "60 rue des Lombards, 75001 Paris", "lat": 48.8597, "lng": 2.3490 },
+    "tickets": [
+      { "name": "Standard", "quantity": 80, "price": 22.00 },
+      { "name": "Carré or", "quantity": 20, "price": 35.50 }
+    ]
+  },
+  {
+    "title": "Masterclass Jazz : dernière place",
+    "description": "Session publique avec un pianiste invité. Une seule place restante : idéal pour tester deux réservations simultanées.",
+    "startAt": "2026-12-05T19:00:00+01:00",
+    "venue": { "name": "New Morning", "adress": "7-9 rue des Petites-Écuries, 75010 Paris", "lat": 48.8728, "lng": 2.3527 },
+    "tickets": [
+      { "name": "Place unique", "quantity": 1, "price": 15.00 }
+    ]
+  },
+  {
+    "title": "Concert Électro : Warehouse Session",
+    "description": "DJ sets techno et house jusqu'au bout de la nuit, sous la Machine du Moulin Rouge.",
+    "startAt": "2026-12-11T23:00:00+01:00",
+    "venue": { "name": "La Machine du Moulin Rouge", "adress": "90 boulevard de Clichy, 75018 Paris", "lat": 48.8841, "lng": 2.3322 },
+    "tickets": [
+      { "name": "Early Bird", "quantity": 0, "price": 15.00 },
+      { "name": "Standard", "quantity": 150, "price": 25.00 }
+    ]
+  },
+  {
+    "title": "Concert Rock : Les Rails Électriques",
+    "description": "Rock garage et riffs saturés pour la sortie du nouvel album du groupe.",
+    "startAt": "2026-12-12T20:00:00+01:00",
+    "venue": { "name": "Le Bataclan", "adress": "50 boulevard Voltaire, 75011 Paris", "lat": 48.8631, "lng": 2.3708 },
+    "tickets": [
+      { "name": "Fosse", "quantity": 300, "price": 32.90 },
+      { "name": "Balcon", "quantity": 120, "price": 39.90 }
+    ]
+  },
+  {
+    "title": "Théâtre : Le Malade imaginaire",
+    "description": "La comédie de Molière dans une mise en scène classique, salle Richelieu.",
+    "startAt": "2026-12-06T20:30:00+01:00",
+    "venue": { "name": "Comédie-Française", "adress": "1 place Colette, 75001 Paris", "lat": 48.8634, "lng": 2.3363 },
+    "tickets": [
+      { "name": "Catégorie 2", "quantity": 60, "price": 18.50 },
+      { "name": "Catégorie 1", "quantity": 40, "price": 42.00 }
+    ]
+  },
+  {
+    "title": "Concert Classique : Quatuor à cordes",
+    "description": "Beethoven et Debussy interprétés par un quatuor de jeunes solistes.",
+    "startAt": "2026-12-13T16:00:00+01:00",
+    "venue": { "name": "Philharmonie de Paris", "adress": "221 avenue Jean Jaurès, 75019 Paris", "lat": 48.8919, "lng": 2.3940 },
+    "tickets": [
+      { "name": "Tarif réduit", "quantity": 100, "price": 12.00 },
+      { "name": "Plein tarif", "quantity": 200, "price": 30.00 }
+    ]
+  },
+  {
+    "title": "Concert Acoustique Intimiste (complet)",
+    "description": "Guitare-voix en petit comité. Toutes les places sont vendues : l'événement doit s'afficher complet.",
+    "startAt": "2026-12-09T20:00:00+01:00",
+    "venue": { "name": "Café de la Danse", "adress": "5 passage Louis-Philippe, 75011 Paris", "lat": 48.8540, "lng": 2.3725 },
+    "tickets": [
+      { "name": "Assis", "quantity": 0, "price": 20.00 },
+      { "name": "Debout", "quantity": 0, "price": 16.00 }
+    ]
+  },
+  {
+    "title": "Expo immersive : Nuit des Lumières",
+    "description": "Projection immersive à 360° sur les grands maîtres de la peinture.",
+    "startAt": "2026-12-18T19:00:00+01:00",
+    "venue": { "name": "Atelier des Lumières", "adress": "38 rue Saint-Maur, 75011 Paris", "lat": 48.8618, "lng": 2.3807 },
+    "tickets": [
+      { "name": "Adulte", "quantity": 250, "price": 17.00 }
+    ]
+  },
+  {
+    "title": "Stand-up : Rires de Montreuil",
+    "description": "Plateau d'humoristes de la scène francilienne, à deux pas de l'école.",
+    "startAt": "2026-12-10T20:00:00+01:00",
+    "venue": { "name": "Théâtre Berthelot", "adress": "6 rue Marcellin Berthelot, 93100 Montreuil", "lat": 48.8606, "lng": 2.4418 },
+    "tickets": [
+      { "name": "Standard", "quantity": 90, "price": 14.00 }
+    ]
+  },
+  {
+    "title": "Concert Rock en banlieue ouest",
+    "description": "À environ 19 km du centre de Paris : visible avec un rayon de 20 km, pas avec 10 km.",
+    "startAt": "2026-12-19T20:30:00+01:00",
+    "venue": { "name": "La Clef", "adress": "46 rue de Mareil, 78100 Saint-Germain-en-Laye", "lat": 48.8990, "lng": 2.0930 },
+    "tickets": [
+      { "name": "Standard", "quantity": 200, "price": 19.00 }
+    ]
+  },
+  {
+    "title": "Concert Jazz à Lyon",
+    "description": "Big band et invités : doit apparaître depuis Lyon, jamais dans une recherche à Paris.",
+    "startAt": "2026-12-12T20:00:00+01:00",
+    "venue": { "name": "Halle Tony Garnier", "adress": "20 place des Docteurs Mérieux, 69007 Lyon", "lat": 45.7316, "lng": 4.8232 },
+    "tickets": [
+      { "name": "Standard", "quantity": 500, "price": 28.00 }
+    ]
+  },
+  {
+    "title": "Concert Électro sur le Vieux-Port",
+    "description": "Soirée électro marseillaise : pour montrer le sélecteur de ville du front.",
+    "startAt": "2026-12-20T22:00:00+01:00",
+    "venue": { "name": "Le Dôme", "adress": "48 avenue Saint-Just, 13004 Marseille", "lat": 43.3085, "lng": 5.3940 },
+    "tickets": [
+      { "name": "Standard", "quantity": 400, "price": 24.00 }
+    ]
+  }
+]
