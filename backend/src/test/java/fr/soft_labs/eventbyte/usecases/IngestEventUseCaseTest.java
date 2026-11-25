@@ -1,15 +1,19 @@
 package fr.soft_labs.eventbyte.usecases;
 
+import fr.soft_labs.eventbyte.domain.booking.BookingLine;
 import fr.soft_labs.eventbyte.domain.event.Coordinates;
 import fr.soft_labs.eventbyte.domain.event.Event;
 import fr.soft_labs.eventbyte.domain.event.Ticket;
 import fr.soft_labs.eventbyte.domain.event.Venue;
+import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,13 +24,34 @@ class IngestEventUseCaseTest {
 
     InMemoryEventRepository repository;
     InMemoryEventSearchIndex searchIndex;
+    RecordingStock stock;
     IngestEventUseCase ingest;
+
+    /** Faux stock : retient les tickets dont le stock a été invalidé. */
+    static class RecordingStock implements TicketStock {
+        final List<String> refreshed = new ArrayList<>();
+
+        @Override
+        public boolean tryTake(List<BookingLine> lines) {
+            return true;
+        }
+
+        @Override
+        public void giveBack(List<BookingLine> lines) {
+        }
+
+        @Override
+        public void refresh(Collection<String> ticketIds) {
+            refreshed.addAll(ticketIds);
+        }
+    }
 
     @BeforeEach
     void setUp() {
         repository = new InMemoryEventRepository();
         searchIndex = new InMemoryEventSearchIndex();
-        ingest = new IngestEventUseCase(repository, searchIndex, Clock.fixed(NOW, ZoneOffset.UTC));
+        stock = new RecordingStock();
+        ingest = new IngestEventUseCase(repository, searchIndex, stock, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     static Event concert(String title, Ticket... tickets) {
@@ -80,7 +105,7 @@ class IngestEventUseCaseTest {
         ingest.upsert(concert("Concert"));
         ingest.delete("evt_1");
 
-        IngestEventUseCase later = new IngestEventUseCase(repository, searchIndex,
+        IngestEventUseCase later = new IngestEventUseCase(repository, searchIndex, stock,
                 Clock.fixed(NOW.plusSeconds(60), ZoneOffset.UTC));
         later.delete("evt_1");
 
@@ -126,5 +151,25 @@ class IngestEventUseCaseTest {
 
         assertThat(searchIndex.indexed).doesNotContainKey("evt_1");
         assertThat(searchIndex.removed).containsExactly("evt_1");
+    }
+
+    // ---------- US-13 / EB-30 : le stock suit les quantités Strapi ----------
+
+    @Test
+    void une_mise_a_jour_strapi_fait_recalculer_le_stock_de_ses_tickets() {
+        ingest.upsert(concert("Concert", new Ticket("tkt_1", "Early", 2500, 100), new Ticket("tkt_2", "VIP", 9000, 10)));
+
+        assertThat(stock.refreshed).containsExactlyInAnyOrder("tkt_1", "tkt_2");
+    }
+
+    @Test
+    void un_message_ignore_ne_touche_pas_au_stock() {
+        ingest.upsert(concert("Concert", new Ticket("tkt_1", "Early", 2500, 100)));
+        ingest.delete("evt_1");
+        stock.refreshed.clear();
+
+        ingest.upsert(concert("Concert (ancien message)", new Ticket("tkt_1", "Early", 2500, 5)));
+
+        assertThat(stock.refreshed).isEmpty();
     }
 }
