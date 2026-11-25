@@ -27,6 +27,11 @@ class InMemoryEventRepository implements EventRepository {
     }
 
     @Override
+    public boolean isVisible(String eventId) {
+        return events.containsKey(eventId) && !deletedAt.containsKey(eventId);
+    }
+
+    @Override
     public boolean markDeleted(String eventId, Instant at) {
         if (!events.containsKey(eventId)) {
             return false;

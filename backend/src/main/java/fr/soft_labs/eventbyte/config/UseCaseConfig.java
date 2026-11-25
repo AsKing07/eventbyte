@@ -1,15 +1,18 @@
 package fr.soft_labs.eventbyte.config;
 
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
+import fr.soft_labs.eventbyte.ports.in.LikeEvent;
 import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
+import fr.soft_labs.eventbyte.ports.out.LikeRepository;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
+import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
 import fr.soft_labs.eventbyte.usecases.RequestBookingUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +41,11 @@ public class UseCaseConfig {
     @Bean
     SearchEvents searchEvents(EventSearchIndex eventSearchIndex, EventReadModel eventReadModel) {
         return new SearchEventsUseCase(eventSearchIndex, eventReadModel);
+    }
+
+    @Bean
+    LikeEvent likeEvent(EventRepository eventRepository, LikeRepository likeRepository) {
+        return new LikeEventUseCase(eventRepository, likeRepository);
     }
 
     @Bean

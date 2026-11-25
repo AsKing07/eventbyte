@@ -12,6 +12,9 @@ public interface EventRepository {
     /** Vrai si l'événement existe et a été supprimé. */
     boolean isDeleted(String eventId);
 
+    /** Vrai si l'événement existe et n'est pas supprimé (visible du public). */
+    boolean isVisible(String eventId);
+
     /**
      * Marque l'événement comme supprimé à la date donnée, s'il ne l'est pas déjà.
      *

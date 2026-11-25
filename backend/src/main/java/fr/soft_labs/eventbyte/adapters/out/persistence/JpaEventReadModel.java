@@ -6,19 +6,24 @@ import fr.soft_labs.eventbyte.domain.event.EventView;
 import fr.soft_labs.eventbyte.domain.event.Ticket;
 import fr.soft_labs.eventbyte.domain.event.Venue;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
+import fr.soft_labs.eventbyte.ports.out.LikeRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Component
 class JpaEventReadModel implements EventReadModel {
 
     private final EventJpaRepository jpa;
 
-    JpaEventReadModel(EventJpaRepository jpa) {
+    private final LikeRepository likes;
+
+    JpaEventReadModel(EventJpaRepository jpa, LikeRepository likes) {
         this.jpa = jpa;
+        this.likes = likes;
     }
 
     @Override
@@ -27,9 +32,9 @@ class JpaEventReadModel implements EventReadModel {
         if (ids.isEmpty()) {
             return List.of();
         }
+        Map<String, Long> counts = likes.countByEvent(ids);
         return jpa.findVisibleWithTickets(ids).stream()
-                // likedCount : 0 tant que les likes (US-8) n'existent pas ; à remplacer par un comptage
-                .map(entity -> new EventView(toDomain(entity), 0))
+                .map(entity -> new EventView(toDomain(entity), counts.getOrDefault(entity.getId(), 0L)))
                 .toList();
     }
 
