@@ -19,12 +19,14 @@ class IngestEventUseCaseTest {
     static final Instant NOW = Instant.parse("2026-11-25T10:00:00Z");
 
     InMemoryEventRepository repository;
+    InMemoryEventSearchIndex searchIndex;
     IngestEventUseCase ingest;
 
     @BeforeEach
     void setUp() {
         repository = new InMemoryEventRepository();
-        ingest = new IngestEventUseCase(repository, Clock.fixed(NOW, ZoneOffset.UTC));
+        searchIndex = new InMemoryEventSearchIndex();
+        ingest = new IngestEventUseCase(repository, searchIndex, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     static Event concert(String title, Ticket... tickets) {
@@ -78,7 +80,8 @@ class IngestEventUseCaseTest {
         ingest.upsert(concert("Concert"));
         ingest.delete("evt_1");
 
-        IngestEventUseCase later = new IngestEventUseCase(repository, Clock.fixed(NOW.plusSeconds(60), ZoneOffset.UTC));
+        IngestEventUseCase later = new IngestEventUseCase(repository, searchIndex,
+                Clock.fixed(NOW.plusSeconds(60), ZoneOffset.UTC));
         later.delete("evt_1");
 
         assertThat(repository.deletedAt).containsEntry("evt_1", NOW);
@@ -102,5 +105,26 @@ class IngestEventUseCaseTest {
 
         assertThat(repository.saves).isEqualTo(savesAvant);
         assertThat(repository.find("evt_1").orElseThrow().title()).isEqualTo("Concert");
+        assertThat(searchIndex.indexed).doesNotContainKey("evt_1");
+    }
+
+    // ---------- US-7 : l'index de recherche suit chaque message ----------
+
+    @Test
+    void un_evenement_cree_ou_modifie_est_indexe_dans_son_dernier_etat() {
+        ingest.upsert(concert("Concert"));
+        ingest.upsert(concert("Concert v2"));
+
+        assertThat(searchIndex.indexed.get("evt_1").title()).isEqualTo("Concert v2");
+    }
+
+    @Test
+    void un_evenement_supprime_est_retire_de_l_index() {
+        ingest.upsert(concert("Concert"));
+
+        ingest.delete("evt_1");
+
+        assertThat(searchIndex.indexed).doesNotContainKey("evt_1");
+        assertThat(searchIndex.removed).containsExactly("evt_1");
     }
 }

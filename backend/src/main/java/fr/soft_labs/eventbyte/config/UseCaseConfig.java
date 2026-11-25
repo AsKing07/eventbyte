@@ -1,14 +1,21 @@
 package fr.soft_labs.eventbyte.config;
 
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
+import fr.soft_labs.eventbyte.ports.in.SearchEvents;
+import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
+import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
+import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
 
-
+/**
+ * Les cas d'usage n'ont pas d'annotation Spring : ils sont déclarés ici.
+ * Ajoutez vos cas d'usage à la suite.
+ */
 @Configuration
 public class UseCaseConfig {
 
@@ -18,7 +25,12 @@ public class UseCaseConfig {
     }
 
     @Bean
-    IngestEvent ingestEvent(EventRepository eventRepository, Clock clock) {
-        return new IngestEventUseCase(eventRepository, clock);
+    IngestEvent ingestEvent(EventRepository eventRepository, EventSearchIndex eventSearchIndex, Clock clock) {
+        return new IngestEventUseCase(eventRepository, eventSearchIndex, clock);
+    }
+
+    @Bean
+    SearchEvents searchEvents(EventSearchIndex eventSearchIndex, EventReadModel eventReadModel) {
+        return new SearchEventsUseCase(eventSearchIndex, eventReadModel);
     }
 }

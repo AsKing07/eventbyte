@@ -63,6 +63,8 @@ meilisearch:
   host: ${MEILISEARCH_HOST:http://localhost:7700}
   # Clé maître définie dans docker-compose.yml (MEILI_MASTER_KEY)
   api-key: ${MEILISEARCH_API_KEY:Cd9_wZ5drjqixClHEnbof-4h0bgktUzXwaY3yt8wJoM}
+  # Index des événements (US-7) : créé et configuré au démarrage
+  events-index: ${MEILISEARCH_EVENTS_INDEX:events}
 
 management:
   endpoints:
