@@ -7,6 +7,8 @@ public interface LikeRepository {
     /** Enregistre le like s'il n'existe pas déjà (sans erreur ni doublon sinon). */
     void add(UserId userId, String eventId);
 
+    void remove(UserId userId, String eventId);
+
     /** Nombre de likes de l'événement : la valeur de {@code likedCount}. */
     long countFor(String eventId);
 
