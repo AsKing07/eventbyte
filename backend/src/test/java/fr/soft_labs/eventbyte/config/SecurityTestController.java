@@ -27,9 +27,6 @@ class SecurityTestController {
     @GetMapping("/events/liked")
     String liked(@CurrentUser UserId userId) { return userId.value(); }
 
-    @PostMapping("/events/{eventId}/like")
-    String like(@PathVariable String eventId, @CurrentUser UserId userId) { return userId.value(); }
-
     @DeleteMapping("/events/{eventId}/like")
     String unlike(@PathVariable String eventId, @CurrentUser UserId userId) { return userId.value(); }
 

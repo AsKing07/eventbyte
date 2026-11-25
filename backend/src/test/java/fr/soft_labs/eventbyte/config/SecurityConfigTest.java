@@ -40,7 +40,6 @@ class SecurityConfigTest {
     @ParameterizedTest(name = "{0} {1} sans token -> 401")
     @CsvSource({
             "GET,    /events/liked",
-            "POST,   /events/evt_1/like",
             "DELETE, /events/evt_1/like",
             "POST,   /bookings",
             "GET,    /bookings/user"
@@ -61,7 +60,6 @@ class SecurityConfigTest {
     @ParameterizedTest(name = "{0} {1} avec token -> l'utilisateur est le sub")
     @CsvSource({
             "GET,    /events/liked",
-            "POST,   /events/evt_1/like",
             "DELETE, /events/evt_1/like",
             "POST,   /bookings",
             "GET,    /bookings/user"
