@@ -1,10 +1,12 @@
 package fr.soft_labs.eventbyte.config;
 
+import fr.soft_labs.eventbyte.ports.in.GetEventsByIds;
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
+import fr.soft_labs.eventbyte.usecases.GetEventsByIdsUseCase;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
 import org.springframework.context.annotation.Bean;
@@ -32,5 +34,10 @@ public class UseCaseConfig {
     @Bean
     SearchEvents searchEvents(EventSearchIndex eventSearchIndex, EventReadModel eventReadModel) {
         return new SearchEventsUseCase(eventSearchIndex, eventReadModel);
+    }
+
+    @Bean
+    GetEventsByIds getEventsByIds(EventReadModel eventReadModel) {
+        return new GetEventsByIdsUseCase(eventReadModel);
     }
 }
