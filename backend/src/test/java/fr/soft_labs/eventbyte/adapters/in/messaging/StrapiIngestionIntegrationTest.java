@@ -35,6 +35,9 @@ class StrapiIngestionIntegrationTest {
 
     @BeforeEach
     void cleanDatabase() {
+        // Les réservations (US-12) référencent les événements : on les vide d'abord
+        jdbc.update("delete from booking_lines");
+        jdbc.update("delete from bookings");
         jdbc.update("delete from tickets");
         jdbc.update("delete from events");
     }

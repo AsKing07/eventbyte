@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * l'identité vient du sub du JWT ; les routes publiques restent ouvertes.
  */
 @WebMvcTest(controllers = SecurityTestController.class)
-@Import({SecurityConfig.class, WebConfig.class})
+@Import({SecurityConfig.class, WebConfig.class, SecurityTestController.class})
+// Origine fixée ici : le test ne dépend ni de application.yml ni d'une variable CORS_ALLOWED_ORIGINS du poste
+@TestPropertySource(properties = "eventbyte.cors.allowed-origins=http://localhost:5173")
 class SecurityConfigTest {
 
     @Autowired
@@ -40,6 +43,7 @@ class SecurityConfigTest {
     @ParameterizedTest(name = "{0} {1} sans token -> 401")
     @CsvSource({
             "GET,    /events/liked",
+            "POST,   /events/evt_1/like",
             "DELETE, /events/evt_1/like",
             "POST,   /bookings",
             "GET,    /bookings/user"
@@ -60,6 +64,7 @@ class SecurityConfigTest {
     @ParameterizedTest(name = "{0} {1} avec token -> l'utilisateur est le sub")
     @CsvSource({
             "GET,    /events/liked",
+            "POST,   /events/evt_1/like",
             "DELETE, /events/evt_1/like",
             "POST,   /bookings",
             "GET,    /bookings/user"

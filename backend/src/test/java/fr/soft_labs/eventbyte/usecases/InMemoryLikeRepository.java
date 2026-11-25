@@ -22,4 +22,11 @@ class InMemoryLikeRepository implements LikeRepository {
     public long countFor(String eventId) {
         return likes.stream().filter(like -> like.eventId().equals(eventId)).count();
     }
+
+    @Override
+    public java.util.Map<String, Long> countByEvent(java.util.Collection<String> eventIds) {
+        return likes.stream()
+                .filter(like -> eventIds.contains(like.eventId()))
+                .collect(java.util.stream.Collectors.groupingBy(Like::eventId, java.util.stream.Collectors.counting()));
+    }
 }

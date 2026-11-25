@@ -28,4 +28,18 @@ class JdbcLikeRepository implements LikeRepository {
         return jdbc.queryForObject(
                 "SELECT count(*) FROM likes WHERE event_id = ?", Long.class, eventId);
     }
+
+    @Override
+    public java.util.Map<String, Long> countByEvent(java.util.Collection<String> eventIds) {
+        if (eventIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(eventIds.size(), "?"));
+        java.util.Map<String, Long> counts = new java.util.HashMap<>();
+        jdbc.query("SELECT event_id, count(*) AS total FROM likes WHERE event_id IN (" + placeholders
+                        + ") GROUP BY event_id",
+                rs -> { counts.put(rs.getString("event_id"), rs.getLong("total")); },
+                eventIds.toArray());
+        return counts;
+    }
 }

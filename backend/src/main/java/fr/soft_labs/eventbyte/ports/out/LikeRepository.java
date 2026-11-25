@@ -9,4 +9,7 @@ public interface LikeRepository {
 
     /** Nombre de likes de l'événement : la valeur de {@code likedCount}. */
     long countFor(String eventId);
+
+    /** Nombre de likes par événement, en une seule requête ; les événements sans like sont absents. */
+    java.util.Map<String, Long> countByEvent(java.util.Collection<String> eventIds);
 }

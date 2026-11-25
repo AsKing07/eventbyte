@@ -62,6 +62,24 @@ class LikeEventIntegrationTest {
     }
 
     @Test
+    void countByEvent_compte_les_likes_de_chaque_evenement() {
+        for (String id : new String[] {"evt_a", "evt_b", "evt_c"}) {
+            jdbc.update("""
+                    INSERT INTO events (id, title, description, cover, venue_name, venue_address,
+                                        venue_latitude, venue_longitude)
+                    VALUES (?, 'Concert', '', '', 'Salle', 'Paris', 48.8, 2.3)
+                    """, id);
+        }
+        likes.add(new fr.soft_labs.eventbyte.domain.UserId("u1"), "evt_a");
+        likes.add(new fr.soft_labs.eventbyte.domain.UserId("u2"), "evt_a");
+        likes.add(new fr.soft_labs.eventbyte.domain.UserId("u1"), "evt_b");
+
+        assertThat(likes.countByEvent(java.util.List.of("evt_a", "evt_b", "evt_c")))
+                .containsExactlyInAnyOrderEntriesOf(java.util.Map.of("evt_a", 2L, "evt_b", 1L));
+        assertThat(likes.countByEvent(java.util.List.of())).isEmpty();
+    }
+
+    @Test
     void un_evenement_inconnu_renvoie_404() throws Exception {
         mvc.perform(post("/events/evt_inconnu_like/like").with(jwt()))
                 .andExpect(status().isNotFound());
