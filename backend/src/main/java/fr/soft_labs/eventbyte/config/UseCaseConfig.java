@@ -31,8 +31,9 @@ public class UseCaseConfig {
     }
 
     @Bean
-    IngestEvent ingestEvent(EventRepository eventRepository, EventSearchIndex eventSearchIndex, Clock clock) {
-        return new IngestEventUseCase(eventRepository, eventSearchIndex, clock);
+    IngestEvent ingestEvent(EventRepository eventRepository, EventSearchIndex eventSearchIndex,
+                            TicketStock ticketStock, Clock clock) {
+        return new IngestEventUseCase(eventRepository, eventSearchIndex, ticketStock, clock);
     }
 
     @Bean

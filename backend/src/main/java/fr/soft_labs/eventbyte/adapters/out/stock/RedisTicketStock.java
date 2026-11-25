@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -18,8 +19,11 @@ import java.util.List;
  * et une réservation de plusieurs tickets prend tout ou rien.
  * <p>
  * Initialisation à la demande : si la clé n'existe pas, stock total Strapi moins les places déjà tenues
- * en base (reserved, awaiting-payment, confirmed), posé avec SETNX (le premier gagne).
- * À traiter avec US-13 / EB-30 : remettre la clé à jour quand Strapi change la quantité d'un ticket.
+ * en base, posé avec SETNX (le premier gagne).
+ * <p>
+ * EB-30 : quand Strapi modifie un événement, {@link #refresh} supprime les clés ; elles sont recalculées
+ * à la réservation suivante avec la nouvelle quantité. Stock baissé sous le réservé : disponible 0,
+ * aucune réservation existante n'est annulée.
  */
 @Component
 class RedisTicketStock implements TicketStock {
@@ -54,7 +58,10 @@ class RedisTicketStock implements TicketStock {
             select t.quantity - coalesce((
                 select sum(l.quantity)
                 from booking_lines l join bookings b on b.id = l.booking_id
-                where l.ticket_id = t.id and b.status in ('RESERVED', 'AWAITING_PAYMENT', 'CONFIRMED')
+                where l.ticket_id = t.id
+                  -- REQUESTED compte aussi : une réservation en cours a pu prendre le stock Redis
+                  -- sans être encore enregistrée en RESERVED. Au pire on sous-estime un instant, jamais de survente.
+                  and b.status in ('REQUESTED', 'RESERVED', 'AWAITING_PAYMENT', 'CONFIRMED')
             ), 0)
             from tickets t
             where t.id = ?
@@ -78,6 +85,13 @@ class RedisTicketStock implements TicketStock {
     @Override
     public void giveBack(List<BookingLine> lines) {
         redis.execute(GIVE_BACK, keys(lines), quantities(lines));
+    }
+
+    @Override
+    public void refresh(Collection<String> ticketIds) {
+        if (!ticketIds.isEmpty()) {
+            redis.delete(ticketIds.stream().map(RedisTicketStock::key).toList());
+        }
     }
 
     private void initializeIfAbsent(BookingLine line) {
