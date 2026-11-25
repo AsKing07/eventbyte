@@ -5,6 +5,7 @@ type EventWebhook = {
     id: string;
     title: string;
     description: string;
+    startAt: string;
     cover: string;
     venue: {
         name: string;
@@ -25,6 +26,8 @@ const resultToWebHook = (result: any): EventWebhook => ({
     id: result.uuid,
     title: result.title,
     description: result.description,
+    // Ajout EventByte (décision EB-27) : la date de début n'était pas transmise au backend
+    startAt: result.startAt,
     cover: result.cover.url,
     venue: {
         name: result.venue.name,
