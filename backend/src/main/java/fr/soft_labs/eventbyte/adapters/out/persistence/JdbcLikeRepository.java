@@ -30,6 +30,10 @@ class JdbcLikeRepository implements LikeRepository {
         return jdbc.queryForList("SELECT event_id FROM likes WHERE user_id = ?",
                 String.class, userId.value());
     }
+    public void remove(UserId userId, String eventId) {
+        jdbc.update("DELETE FROM likes WHERE user_id = ? AND event_id = ?",
+                userId.value(), eventId);
+    }
 
     @Override
     public long countFor(String eventId) {

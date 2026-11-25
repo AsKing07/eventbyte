@@ -5,6 +5,7 @@ import fr.soft_labs.eventbyte.ports.in.LikeEvent;
 import fr.soft_labs.eventbyte.ports.in.ListLikedEvents;
 import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
+import fr.soft_labs.eventbyte.ports.in.UnlikeEvent;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
@@ -17,6 +18,7 @@ import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
 import fr.soft_labs.eventbyte.usecases.ListLikedEventsUseCase;
 import fr.soft_labs.eventbyte.usecases.RequestBookingUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
+import fr.soft_labs.eventbyte.usecases.UnlikeEventUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,8 +38,9 @@ public class UseCaseConfig {
     }
 
     @Bean
-    IngestEvent ingestEvent(EventRepository eventRepository, EventSearchIndex eventSearchIndex, Clock clock) {
-        return new IngestEventUseCase(eventRepository, eventSearchIndex, clock);
+    IngestEvent ingestEvent(EventRepository eventRepository, EventSearchIndex eventSearchIndex,
+                            TicketStock ticketStock, Clock clock) {
+        return new IngestEventUseCase(eventRepository, eventSearchIndex, ticketStock, clock);
     }
 
     @Bean
@@ -52,7 +55,10 @@ public class UseCaseConfig {
 
     @Bean
     ListLikedEvents listLikedEvents(LikeRepository likeRepository, EventReadModel eventReadModel) {
-        return new ListLikedEventsUseCase(likeRepository, eventReadModel);
+        return new ListLikedEventsUseCase(likeRepository, eventReadModel);}
+        
+    UnlikeEvent unlikeEvent(LikeRepository likeRepository) {
+        return new UnlikeEventUseCase(likeRepository);
     }
 
     @Bean

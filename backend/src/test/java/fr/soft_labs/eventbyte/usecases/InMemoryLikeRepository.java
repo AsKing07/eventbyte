@@ -24,7 +24,10 @@ class InMemoryLikeRepository implements LikeRepository {
         return likes.stream()
                 .filter(like -> like.userId().equals(userId))
                 .map(Like::eventId)
-                .toList();
+                .toList();}
+                
+    public void remove(UserId userId, String eventId) {
+        likes.remove(new Like(userId, eventId));
     }
 
     @Override

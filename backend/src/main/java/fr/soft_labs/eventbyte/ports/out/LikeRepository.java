@@ -10,6 +10,7 @@ public interface LikeRepository {
     void add(UserId userId, String eventId);
 
     List<String> findEventIdsByUser(UserId userId);
+    void remove(UserId userId, String eventId);
 
     /** Nombre de likes de l'événement : la valeur de {@code likedCount}. */
     long countFor(String eventId);
