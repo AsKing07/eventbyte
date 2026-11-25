@@ -1,16 +1,22 @@
 package fr.soft_labs.eventbyte.config;
 
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
+import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
+import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
+import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
+import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
+import fr.soft_labs.eventbyte.usecases.RequestBookingUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import java.util.UUID;
 
 /**
  * Les cas d'usage n'ont pas d'annotation Spring : ils sont déclarés ici.
@@ -32,5 +38,12 @@ public class UseCaseConfig {
     @Bean
     SearchEvents searchEvents(EventSearchIndex eventSearchIndex, EventReadModel eventReadModel) {
         return new SearchEventsUseCase(eventSearchIndex, eventReadModel);
+    }
+
+    @Bean
+    RequestBooking requestBooking(TicketCatalog ticketCatalog, TicketStock ticketStock,
+                                  BookingRepository bookingRepository, Clock clock) {
+        return new RequestBookingUseCase(ticketCatalog, ticketStock, bookingRepository,
+                () -> UUID.randomUUID().toString(), clock);
     }
 }
