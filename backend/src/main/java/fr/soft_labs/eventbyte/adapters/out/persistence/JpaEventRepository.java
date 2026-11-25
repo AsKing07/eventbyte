@@ -72,6 +72,11 @@ class JpaEventRepository implements EventRepository {
     }
 
     @Override
+    public boolean isVisible(String eventId) {
+        return jpa.findById(eventId).map(e -> e.getDeletedAt() == null).orElse(false);
+    }
+
+    @Override
     @Transactional
     public boolean markDeleted(String eventId, Instant deletedAt) {
         return jpa.findById(eventId).map(entity -> {
