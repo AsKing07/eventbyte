@@ -29,6 +29,14 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:admin}
     password: ${RABBITMQ_PASSWORD:admin}
+    listener:
+      simple:
+        # Un message en échec n'est jamais remis en boucle : après les essais, il part en DLQ
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
 
   data:
     redis:
@@ -40,6 +48,13 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/eventbyte}
+
+eventbyte:
+  rabbitmq:
+    # Exchange topic sur lequel Strapi publie event.created / event.updated / event.deleted
+    exchange: events
+    # File du backend ; les messages rejetés vont dans <file>.dlq
+    events-queue: eventbyte.events
 
 meilisearch:
   host: ${MEILISEARCH_HOST:http://localhost:7700}
