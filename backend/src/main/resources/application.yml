@@ -1,0 +1,56 @@
+# Valeurs par défaut alignées sur le docker-compose.yml du dépôt.
+# Chaque valeur peut être surchargée par une variable d'environnement.
+
+server:
+  # Le front appelle http://localhost:3000 par défaut (VITE_API_URL dans frontend/web/src/lib/env.ts)
+  port: ${SERVER_PORT:3000}
+
+spring:
+  application:
+    name: eventbyte
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/eventbyte}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate   # le schéma vient uniquement des migrations Flyway
+
+  flyway:
+    # Strapi utilise le schéma "strapi" de la même base : le backend reste dans "public"
+    schemas: public
+    default-schema: public
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:admin}
+    password: ${RABBITMQ_PASSWORD:admin}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/eventbyte}
+
+meilisearch:
+  host: ${MEILISEARCH_HOST:http://localhost:7700}
+  # Clé maître définie dans docker-compose.yml (MEILI_MASTER_KEY)
+  api-key: ${MEILISEARCH_API_KEY:Cd9_wZ5drjqixClHEnbof-4h0bgktUzXwaY3yt8wJoM}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
