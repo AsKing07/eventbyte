@@ -5,6 +5,8 @@ import fr.soft_labs.eventbyte.ports.out.LikeRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 class JdbcLikeRepository implements LikeRepository {
 
@@ -21,6 +23,12 @@ class JdbcLikeRepository implements LikeRepository {
                 VALUES (?, ?)
                 ON CONFLICT (user_id, event_id) DO NOTHING
                 """, userId.value(), eventId);
+    }
+
+    @Override
+    public List<String> findEventIdsByUser(UserId userId) {
+        return jdbc.queryForList("SELECT event_id FROM likes WHERE user_id = ?",
+                String.class, userId.value());
     }
 
     @Override

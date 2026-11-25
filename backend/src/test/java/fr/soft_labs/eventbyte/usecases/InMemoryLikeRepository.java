@@ -4,6 +4,7 @@ import fr.soft_labs.eventbyte.domain.UserId;
 import fr.soft_labs.eventbyte.ports.out.LikeRepository;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /** Faux repository en mémoire : teste les likes sans base de données. */
@@ -16,6 +17,14 @@ class InMemoryLikeRepository implements LikeRepository {
     @Override
     public void add(UserId userId, String eventId) {
         likes.add(new Like(userId, eventId));
+    }
+
+    @Override
+    public List<String> findEventIdsByUser(UserId userId) {
+        return likes.stream()
+                .filter(like -> like.userId().equals(userId))
+                .map(Like::eventId)
+                .toList();
     }
 
     @Override
