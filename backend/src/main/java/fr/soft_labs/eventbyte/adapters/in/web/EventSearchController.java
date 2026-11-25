@@ -9,7 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** US-7 : GET /events/search?lat&lng&radius&query (route publique). */
+/**
+ * US-7 : GET /events/search?lat&lng&radius&query (route publique).
+ * <p>
+ * radius : le README parle de kilomètres, mais le front envoie des MÈTRES
+ * (choix 1000 à 100 000 dans location-filter.tsx, affichés « / 1000 km »).
+ * Le front ne devant pas être modifié, on convertit ici ; le domaine reste en km.
+ */
 @RestController
 class EventSearchController {
 
@@ -24,7 +30,8 @@ class EventSearchController {
                                @RequestParam double lng,
                                @RequestParam double radius,
                                @RequestParam(required = false, defaultValue = "") String query) {
-        SearchCriteria criteria = new SearchCriteria(new Coordinates(lat, lng), radius, query);
+        double radiusKm = radius / 1000;
+        SearchCriteria criteria = new SearchCriteria(new Coordinates(lat, lng), radiusKm, query);
         return searchEvents.search(criteria).stream().map(EventResponse::from).toList();
     }
 }

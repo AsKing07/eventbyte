@@ -60,6 +60,8 @@ Le détail et les preuves sont dans les tickets Jira `decision-spec`.
 | Prix reçus de Strapi (EB-28) | Message en centimes | Strapi stocke des euros (`decimal`, ex. `30.23` générés par le CLI) | Conversion ×100 à la réception : centimes partout dans le backend (requis par Stripe) |
 | Prix renvoyés par l'API (EB-28) | Centimes | Le front affiche le nombre tel quel en euros (pas de division par 100, données de démo en `13.99`) | L'API renvoie des euros, conversion à un seul endroit ; le front doit fonctionner sans modification |
 | `startAt` (EB-27) | Obligatoire dans la réponse API | Absent du message Strapi alors que le front affiche la date | Ajout d'une ligne dans `frontend/strapi/.../lifecycles.ts` ; le backend le lit s'il est présent |
+| Rayon de recherche (US-7) | `radius` en kilomètres | Le front envoie des mètres (choix 1 000 à 100 000, affichés « / 1000 km ») | Conversion mètres → km dans `EventSearchController` ; le domaine reste en km |
+| Événements sans date | — | Le front valide les réponses avec zod : `startAt` doit être une chaîne, un seul `null` fait échouer toute la liste | Les événements sans `startAt` sont exclus des résultats |
 | Coordonnées du lieu | Utilisées pour la recherche géographique | Facultatives dans Strapi : le hook plante (`reading 'lat'`) et aucun message n'est envoyé | Toujours renseigner la position ; correction possible : `required: true` dans `venue.json` |
 | Ordre des messages | — | L'outbox Strapi n'a pas d'`ORDER BY` et republie les échecs plus tard | Ingestion idempotente ; un événement supprimé ne revient pas |
 | Messages publiés avant le 1er démarrage du backend | — | Exchange topic sans file : messages perdus | Démarrer le backend avant le seed ; rejeu possible via `strapi.outbox_events` |

@@ -61,7 +61,7 @@ class EventSearchIntegrationTest {
 
         await().atMost(Duration.ofSeconds(15)).untilAsserted(() ->
                 mvc.perform(get("/events/search").param("lat", LAT).param("lng", LNG)
-                                .param("radius", "5").param("query", "jazz"))
+                                .param("radius", "5000").param("query", "jazz"))
                    .andExpect(status().isOk())
                    .andExpect(jsonPath("$[*].id").value(hasItem("evt_jazz")))
                    .andExpect(jsonPath("$[*].id").value(not(hasItem("evt_lyon"))))   // hors rayon
@@ -73,14 +73,14 @@ class EventSearchIntegrationTest {
         publish("event.created", event("evt_suppr", "Concert éphémère", 48.8707, 2.3475));
         await().atMost(Duration.ofSeconds(15)).untilAsserted(() ->
                 mvc.perform(get("/events/search").param("lat", LAT).param("lng", LNG)
-                                .param("radius", "5").param("query", "éphémère"))
+                                .param("radius", "5000").param("query", "éphémère"))
                    .andExpect(jsonPath("$[*].id").value(hasItem("evt_suppr"))));
 
         publish("event.deleted", "{ \"id\": \"evt_suppr\" }");
 
         await().atMost(Duration.ofSeconds(15)).untilAsserted(() ->
                 mvc.perform(get("/events/search").param("lat", LAT).param("lng", LNG)
-                                .param("radius", "5").param("query", "éphémère"))
+                                .param("radius", "5000").param("query", "éphémère"))
                    .andExpect(jsonPath("$[*].id").value(not(hasItem("evt_suppr")))));
     }
 }

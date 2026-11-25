@@ -50,7 +50,7 @@ class EventSearchControllerTest {
         when(searchEvents.search(any())).thenReturn(List.of(new EventView(event, 3)));
 
         mvc.perform(get("/events/search").param("lat", "48.85").param("lng", "2.35")
-                        .param("radius", "10").param("query", "jazz"))
+                        .param("radius", "10000").param("query", "jazz"))   // mètres, comme le front
            .andExpect(status().isOk())
            .andExpect(jsonPath("$[0].id").value("evt_1"))
            .andExpect(jsonPath("$[0].venue.adresse").value("5 bd Poissonnière"))
@@ -68,10 +68,20 @@ class EventSearchControllerTest {
     void le_mot_cle_est_facultatif() throws Exception {
         when(searchEvents.search(any())).thenReturn(List.of());
 
-        mvc.perform(get("/events/search").param("lat", "48.85").param("lng", "2.35").param("radius", "10"))
+        mvc.perform(get("/events/search").param("lat", "48.85").param("lng", "2.35").param("radius", "10000"))
            .andExpect(status().isOk());
 
         verify(searchEvents).search(new SearchCriteria(new Coordinates(48.85, 2.35), 10, ""));
+    }
+
+    @Test
+    void le_rayon_maximal_du_front_100_km_est_accepte() throws Exception {
+        when(searchEvents.search(any())).thenReturn(List.of());
+
+        mvc.perform(get("/events/search").param("lat", "48.85").param("lng", "2.35").param("radius", "100000"))
+           .andExpect(status().isOk());
+
+        verify(searchEvents).search(new SearchCriteria(new Coordinates(48.85, 2.35), 100, ""));
     }
 
     @Test
