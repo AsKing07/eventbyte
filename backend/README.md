@@ -49,3 +49,23 @@ Toutes les valeurs par défaut de `application.yml` correspondent au `docker-com
 Chacune peut être surchargée par une variable d'environnement
 (`DB_URL`, `RABBITMQ_HOST`, `REDIS_HOST`, `KEYCLOAK_ISSUER_URI`, `MEILISEARCH_HOST`, `SERVER_PORT`…).
 Les secrets (clé Stripe à venir) passent uniquement par variables d'environnement, jamais dans le dépôt.
+
+## Écarts avec le sujet et décisions
+
+Constats faits sur le code fourni et les données réelles, et choix du groupe.
+Le détail et les preuves sont dans les tickets Jira `decision-spec`.
+
+| Sujet | Ce que dit le README / PDF | Ce qu'on a constaté | Décision |
+|---|---|---|---|
+| Prix reçus de Strapi (EB-28) | Message en centimes | Strapi stocke des euros (`decimal`, ex. `30.23` générés par le CLI) | Conversion ×100 à la réception : centimes partout dans le backend (requis par Stripe) |
+| Prix renvoyés par l'API (EB-28) | Centimes | Le front affiche le nombre tel quel en euros (pas de division par 100, données de démo en `13.99`) | L'API renvoie des euros, conversion à un seul endroit ; le front doit fonctionner sans modification |
+| `startAt` (EB-27) | Obligatoire dans la réponse API | Absent du message Strapi alors que le front affiche la date | Ajout d'une ligne dans `frontend/strapi/.../lifecycles.ts` ; le backend le lit s'il est présent |
+| Coordonnées du lieu | Utilisées pour la recherche géographique | Facultatives dans Strapi : le hook plante (`reading 'lat'`) et aucun message n'est envoyé | Toujours renseigner la position ; correction possible : `required: true` dans `venue.json` |
+| Ordre des messages | — | L'outbox Strapi n'a pas d'`ORDER BY` et republie les échecs plus tard | Ingestion idempotente ; un événement supprimé ne revient pas |
+| Messages publiés avant le 1er démarrage du backend | — | Exchange topic sans file : messages perdus | Démarrer le backend avant le seed ; rejeu possible via `strapi.outbox_events` |
+
+Rejouer tous les messages Strapi (environnement de dev) :
+
+```
+docker compose exec postgres psql -U root -d eventbyte -c "truncate public.tickets, public.events; update strapi.outbox_events set processed_at = null;"
+```
