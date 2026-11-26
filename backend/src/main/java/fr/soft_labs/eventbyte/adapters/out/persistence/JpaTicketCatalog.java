@@ -22,4 +22,10 @@ class JpaTicketCatalog implements TicketCatalog {
     public List<TicketOffer> findOffers(Collection<String> ticketIds) {
         return ticketIds.isEmpty() ? List.of() : jpa.findOffers(ticketIds);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TicketOffer> findOffersByEventId(String eventId) {
+        return jpa.findOffersByEventId(eventId);
+    }
 }

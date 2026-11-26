@@ -32,8 +32,17 @@ class RequestBookingUseCaseTest {
 
     /** Faux catalogue : les offres connues. */
     final Map<String, TicketOffer> offers = new HashMap<>();
-    final TicketCatalog catalog = (Collection<String> ids) ->
-            ids.stream().filter(offers::containsKey).map(offers::get).toList();
+    final TicketCatalog catalog = new TicketCatalog() {
+        @Override
+        public List<TicketOffer> findOffers(Collection<String> ids) {
+            return ids.stream().filter(offers::containsKey).map(offers::get).toList();
+        }
+
+        @Override
+        public List<TicketOffer> findOffersByEventId(String eventId) {
+            return List.of();
+        }
+    };
 
     /** Faux stock : tout ou rien, comme le script Redis. */
     static class FakeStock implements TicketStock {
@@ -46,6 +55,11 @@ class RequestBookingUseCaseTest {
                 lines.forEach(l -> available.merge(l.ticketId(), -l.quantity(), Integer::sum));
             }
             return enough;
+        }
+
+        @Override
+        public int available(String ticketId) {
+            return available.getOrDefault(ticketId, 0);
         }
 
         @Override

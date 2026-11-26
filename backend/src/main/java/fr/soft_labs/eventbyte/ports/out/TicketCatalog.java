@@ -9,4 +9,7 @@ public interface TicketCatalog {
 
     /** Tickets en vente parmi ces ids (événements non supprimés) ; les ids inconnus sont absents du résultat. */
     List<TicketOffer> findOffers(Collection<String> ticketIds);
+
+    /** Tous les tickets en vente d'un événement visible. */
+    List<TicketOffer> findOffersByEventId(String eventId);
 }

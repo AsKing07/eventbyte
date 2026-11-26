@@ -17,4 +17,12 @@ interface TicketJpaRepository extends JpaRepository<TicketEntity, String> {
             where t.id in :ids and e.deletedAt is null
             """)
     List<TicketOffer> findOffers(@Param("ids") Collection<String> ids);
+
+    @Query("""
+            select new fr.soft_labs.eventbyte.domain.booking.TicketOffer(t.id, e.id, t.name, t.price, t.quantity)
+            from TicketEntity t join t.event e
+            where e.id = :eventId and e.deletedAt is null
+            order by t.id
+            """)
+    List<TicketOffer> findOffersByEventId(@Param("eventId") String eventId);
 }
