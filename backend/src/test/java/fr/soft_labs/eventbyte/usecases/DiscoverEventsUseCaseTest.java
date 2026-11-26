@@ -51,10 +51,18 @@ class DiscoverEventsUseCaseTest {
     }
 
     @Test
-    void cherche_autour_de_la_position_a_partir_de_maintenant() {
+    void cherche_autour_de_la_position_en_gardant_les_evenements_en_cours() {
         discover.discover(PARIS);
 
-        assertThat(index.lastDiscovery).isEqualTo(new DiscoveryCriteria(PARIS, NOW));
+        assertThat(index.lastDiscovery).isEqualTo(new DiscoveryCriteria(PARIS, NOW.minus(DiscoveryCriteria.ONGOING_GRACE)));
+    }
+
+    @Test
+    void un_evenement_commence_il_y_a_une_heure_reste_visible() {
+        inDatabase("evt_en_cours", NOW.minusSeconds(3600));
+        index.nextResults = List.of("evt_en_cours");
+
+        assertThat(ids(discover.discover(PARIS))).containsExactly("evt_en_cours");
     }
 
     @Test
@@ -78,7 +86,7 @@ class DiscoverEventsUseCaseTest {
     @Test
     void exclut_les_evenements_passes_ou_sans_date_selon_la_base() {
         inDatabase("evt_futur", TOMORROW);
-        inDatabase("evt_passe", NOW.minusSeconds(60));   // date modifiée depuis l'indexation
+        inDatabase("evt_passe", NOW.minusSeconds(4 * 3600));   // date modifiée depuis l'indexation, au-delà de la marge
         inDatabase("evt_sans_date", null);
         index.nextResults = List.of("evt_passe", "evt_sans_date", "evt_futur");
 

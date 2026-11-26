@@ -32,7 +32,7 @@ public class DiscoverEventsUseCase implements DiscoverEvents {
 
     @Override
     public List<EventView> discover(Coordinates position) {
-        DiscoveryCriteria criteria = new DiscoveryCriteria(position, clock.instant());
+        DiscoveryCriteria criteria = DiscoveryCriteria.around(position, clock.instant());
         List<String> ids = index.discover(criteria);
         if (ids.isEmpty()) {
             return List.of();

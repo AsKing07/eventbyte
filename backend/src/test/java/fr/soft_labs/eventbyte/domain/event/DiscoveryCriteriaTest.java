@@ -37,6 +37,15 @@ class DiscoveryCriteriaTest {
     }
 
     @Test
+    void autour_d_une_position_garde_les_evenements_commences_depuis_moins_de_3_h() {
+        DiscoveryCriteria criteria = DiscoveryCriteria.around(new Coordinates(48.8585, 2.3475), NOW);
+
+        assertThat(criteria.startingFrom()).isEqualTo(NOW.minusSeconds(3 * 3600));
+        assertThat(criteria.isUpcoming(startingAt(NOW.minusSeconds(3600)))).isTrue();
+        assertThat(criteria.isUpcoming(startingAt(NOW.minusSeconds(4 * 3600)))).isFalse();
+    }
+
+    @Test
     void la_position_et_la_date_sont_obligatoires() {
         assertThatThrownBy(() -> new DiscoveryCriteria(null, NOW)).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> new DiscoveryCriteria(new Coordinates(0, 0), null))
