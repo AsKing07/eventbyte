@@ -2,17 +2,30 @@ package fr.soft_labs.eventbyte.config;
 
 import fr.soft_labs.eventbyte.ports.in.GetEventsByIds;
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
+import fr.soft_labs.eventbyte.ports.in.LikeEvent;
+import fr.soft_labs.eventbyte.ports.in.ListLikedEvents;
+import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
+import fr.soft_labs.eventbyte.ports.in.UnlikeEvent;
+import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
 import fr.soft_labs.eventbyte.usecases.GetEventsByIdsUseCase;
+import fr.soft_labs.eventbyte.ports.out.LikeRepository;
+import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
+import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
+import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
+import fr.soft_labs.eventbyte.usecases.ListLikedEventsUseCase;
+import fr.soft_labs.eventbyte.usecases.RequestBookingUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
+import fr.soft_labs.eventbyte.usecases.UnlikeEventUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import java.util.UUID;
 
 /**
  * Les cas d'usage n'ont pas d'annotation Spring : ils sont déclarés ici.
@@ -27,8 +40,9 @@ public class UseCaseConfig {
     }
 
     @Bean
-    IngestEvent ingestEvent(EventRepository eventRepository, EventSearchIndex eventSearchIndex, Clock clock) {
-        return new IngestEventUseCase(eventRepository, eventSearchIndex, clock);
+    IngestEvent ingestEvent(EventRepository eventRepository, EventSearchIndex eventSearchIndex,
+                            TicketStock ticketStock, Clock clock) {
+        return new IngestEventUseCase(eventRepository, eventSearchIndex, ticketStock, clock);
     }
 
     @Bean
@@ -39,5 +53,26 @@ public class UseCaseConfig {
     @Bean
     GetEventsByIds getEventsByIds(EventReadModel eventReadModel) {
         return new GetEventsByIdsUseCase(eventReadModel);
+    }
+    
+    LikeEvent likeEvent(EventRepository eventRepository, LikeRepository likeRepository) {
+        return new LikeEventUseCase(eventRepository, likeRepository);
+    }
+
+    @Bean
+    ListLikedEvents listLikedEvents(LikeRepository likeRepository, EventReadModel eventReadModel) {
+        return new ListLikedEventsUseCase(likeRepository, eventReadModel);
+    }
+
+    @Bean
+    UnlikeEvent unlikeEvent(LikeRepository likeRepository) {
+        return new UnlikeEventUseCase(likeRepository);
+    }
+
+    @Bean
+    RequestBooking requestBooking(TicketCatalog ticketCatalog, TicketStock ticketStock,
+                                  BookingRepository bookingRepository, Clock clock) {
+        return new RequestBookingUseCase(ticketCatalog, ticketStock, bookingRepository,
+                () -> UUID.randomUUID().toString(), clock);
     }
 }

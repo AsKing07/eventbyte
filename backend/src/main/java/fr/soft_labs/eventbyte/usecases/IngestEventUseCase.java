@@ -1,9 +1,11 @@
 package fr.soft_labs.eventbyte.usecases;
 
 import fr.soft_labs.eventbyte.domain.event.Event;
+import fr.soft_labs.eventbyte.domain.event.Ticket;
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
+import fr.soft_labs.eventbyte.ports.out.TicketStock;
 
 import java.time.Clock;
 import java.util.Objects;
@@ -27,11 +29,13 @@ public class IngestEventUseCase implements IngestEvent {
 
     private final EventRepository events;
     private final EventSearchIndex searchIndex;
+    private final TicketStock stock;
     private final Clock clock;
 
-    public IngestEventUseCase(EventRepository events, EventSearchIndex searchIndex, Clock clock) {
+    public IngestEventUseCase(EventRepository events, EventSearchIndex searchIndex, TicketStock stock, Clock clock) {
         this.events = Objects.requireNonNull(events);
         this.searchIndex = Objects.requireNonNull(searchIndex);
+        this.stock = Objects.requireNonNull(stock);
         this.clock = Objects.requireNonNull(clock);
     }
 
@@ -43,6 +47,8 @@ public class IngestEventUseCase implements IngestEvent {
         }
         events.save(event);
         searchIndex.index(event);
+        // US-13 / EB-30 : la quantité a pu changer dans Strapi, le stock disponible sera recalculé
+        stock.refresh(event.tickets().stream().map(Ticket::id).toList());
     }
 
     @Override
