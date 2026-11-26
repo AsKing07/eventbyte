@@ -1,3 +1,7 @@
 .eventbyte/
 
 .env
+
+# Réglages et secrets propres à chaque poste
+.vscode/launch.json
+.eventbyte-local-ports.yml
