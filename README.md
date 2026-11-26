@@ -121,7 +121,7 @@ Array<{
   },
   isSoldOut: boolean,         // Indique si l'événement est complet
   startAt: string,            // Date de début (format ISO 8601)
-  lowestPrice: number,        // Prix le plus bas en centimes
+  lowestPrice: number,        // Prix le plus bas en euros
   description: string
 }>
 ```
@@ -151,10 +151,12 @@ Array<{
   },
   isSoldOut: boolean,
   startAt: string,
-  lowestPrice: number,
+  lowestPrice: number,        // Prix le plus bas en euros
   description: string
 }
 ```
+
+**Réponse:** `404 Not Found` si l’événement est introuvable, supprimé ou sans date de début.
 
 ---
 
