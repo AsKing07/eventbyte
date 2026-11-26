@@ -60,6 +60,34 @@ class LikedEventsIntegrationTest {
     }
 
     @Test
+    void les_likes_les_plus_recents_arrivent_en_premier() throws Exception {
+        creerEvenement("evt_ancien", "Ancien");
+        creerEvenement("evt_recent", "Récent");
+        // Dates explicites : dans une même transaction, now() renvoie toujours la même heure
+        likerA("sabine", "evt_ancien", "2026-11-20 10:00:00+00");
+        likerA("sabine", "evt_recent", "2026-11-25 10:00:00+00");
+
+        mvc.perform(get(PATH).with(jwt().jwt(token -> token.subject("sabine"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("evt_recent"))
+                .andExpect(jsonPath("$[1].id").value("evt_ancien"));
+    }
+
+    @Test
+    void un_evenement_supprime_n_apparait_plus() throws Exception {
+        creerEvenement("evt_garde", "Gardé");
+        creerEvenement("evt_supprime", "Supprimé");
+        likes.add(new UserId("sabine"), "evt_garde");
+        likes.add(new UserId("sabine"), "evt_supprime");
+        jdbc.update("UPDATE events SET deleted_at = now() WHERE id = 'evt_supprime'");
+
+        mvc.perform(get(PATH).with(jwt().jwt(token -> token.subject("sabine"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value("evt_garde"));
+    }
+
+    @Test
     void un_compte_sans_like_recoit_une_liste_vide() throws Exception {
         mvc.perform(get(PATH).with(jwt().jwt(token -> token.subject("sans-like"))))
                 .andExpect(status().isOk())
@@ -77,5 +105,10 @@ class LikedEventsIntegrationTest {
                                     venue_latitude, venue_longitude)
                 VALUES (?, ?, '', '', TIMESTAMPTZ '2026-12-31 21:00:00+00', 'Salle', 'Paris', 48.85, 2.35)
                 """, id, titre);
+    }
+
+    private void likerA(String userId, String eventId, String likedAt) {
+        jdbc.update("INSERT INTO likes (user_id, event_id, liked_at) VALUES (?, ?, CAST(? AS timestamptz))",
+                userId, eventId, likedAt);
     }
 }

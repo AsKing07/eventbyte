@@ -55,8 +55,10 @@ public class UseCaseConfig {
 
     @Bean
     ListLikedEvents listLikedEvents(LikeRepository likeRepository, EventReadModel eventReadModel) {
-        return new ListLikedEventsUseCase(likeRepository, eventReadModel);}
-        
+        return new ListLikedEventsUseCase(likeRepository, eventReadModel);
+    }
+
+    @Bean
     UnlikeEvent unlikeEvent(LikeRepository likeRepository) {
         return new UnlikeEventUseCase(likeRepository);
     }
