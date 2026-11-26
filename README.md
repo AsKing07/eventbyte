@@ -265,8 +265,8 @@ Array<{
   id: string,
   eventId: string,
   name: string,      // Nom du type de ticket (ex: "Early Bird", "VIP")
-  price: number,     // Prix en centimes
-  quantity: number   // Quantité disponible
+  price: number,     // Prix en euros (ex: 30.23)
+  quantity: number   // Quantité actuellement disponible, réservations en cours déduites
 }>
 ```
 

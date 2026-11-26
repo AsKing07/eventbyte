@@ -77,9 +77,16 @@ class RedisTicketStock implements TicketStock {
 
     @Override
     public boolean tryTake(List<BookingLine> lines) {
-        lines.forEach(this::initializeIfAbsent);
+        lines.forEach(line -> initializeIfAbsent(line.ticketId()));
         Long taken = redis.execute(TAKE, keys(lines), quantities(lines));
         return Long.valueOf(1).equals(taken);
+    }
+
+    /** Lecture seule côté client, mais initialise la clé si besoin (setIfAbsent : sans risque face aux réservations). */
+    @Override
+    public int available(String ticketId) {
+        initializeIfAbsent(ticketId);
+        return Integer.parseInt(redis.opsForValue().get(key(ticketId)));
     }
 
     @Override
@@ -94,12 +101,12 @@ class RedisTicketStock implements TicketStock {
         }
     }
 
-    private void initializeIfAbsent(BookingLine line) {
-        String key = key(line.ticketId());
+    private void initializeIfAbsent(String ticketId) {
+        String key = key(ticketId);
         if (Boolean.TRUE.equals(redis.hasKey(key))) {
             return;
         }
-        List<Long> available = jdbc.queryForList(AVAILABLE_FROM_DATABASE, Long.class, line.ticketId());
+        List<Long> available = jdbc.queryForList(AVAILABLE_FROM_DATABASE, Long.class, ticketId);
         long value = available.isEmpty() || available.get(0) == null ? 0 : Math.max(0, available.get(0));
         redis.opsForValue().setIfAbsent(key, Long.toString(value));
     }

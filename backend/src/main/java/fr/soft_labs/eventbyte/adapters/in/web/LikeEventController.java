@@ -1,12 +1,10 @@
 package fr.soft_labs.eventbyte.adapters.in.web;
 
 import fr.soft_labs.eventbyte.domain.UserId;
-import fr.soft_labs.eventbyte.domain.event.EventNotFoundException;
 import fr.soft_labs.eventbyte.ports.in.LikeEvent;
 import fr.soft_labs.eventbyte.ports.in.UnlikeEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -34,9 +32,5 @@ class LikeEventController {
     void unlike(@CurrentUser UserId userId, @PathVariable("eventId") String eventId) {
         unlikeEvent.unlike(userId, eventId);
     }
-
-    @ExceptionHandler(EventNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    void eventNotFound() {
-    }
+    // Événement inconnu -> 404 : géré pour tous les contrôleurs par ApiExceptionHandler
 }

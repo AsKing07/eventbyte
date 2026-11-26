@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.config;
 
+import fr.soft_labs.eventbyte.ports.in.GetEventTickets;
 import fr.soft_labs.eventbyte.ports.in.GetEventsByIds;
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
 import fr.soft_labs.eventbyte.ports.in.LikeEvent;
@@ -17,6 +18,7 @@ import fr.soft_labs.eventbyte.ports.out.LikeRepository;
 import fr.soft_labs.eventbyte.ports.out.PaymentGateway;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
+import fr.soft_labs.eventbyte.usecases.GetEventTicketsUseCase;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
 import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
 import fr.soft_labs.eventbyte.usecases.ListLikedEventsUseCase;
@@ -84,5 +86,11 @@ public class UseCaseConfig {
                                   BookingRepository bookingRepository, Clock clock, StartPayment startPayment) {
         return new RequestBookingUseCase(ticketCatalog, ticketStock, bookingRepository,
                 () -> UUID.randomUUID().toString(), clock, startPayment);
+    }
+
+    @Bean
+    GetEventTickets getEventTickets(EventRepository eventRepository, TicketCatalog ticketCatalog,
+                                    TicketStock ticketStock) {
+        return new GetEventTicketsUseCase(eventRepository, ticketCatalog, ticketStock);
     }
 }

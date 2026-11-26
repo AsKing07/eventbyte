@@ -37,6 +37,11 @@ class IngestEventUseCaseTest {
         }
 
         @Override
+        public int available(String ticketId) {
+            return 0;
+        }
+
+        @Override
         public void giveBack(List<BookingLine> lines) {
         }
 
