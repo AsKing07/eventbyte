@@ -13,6 +13,9 @@ import java.util.Objects;
 /** Charge en une lecture les événements visibles et conserve l'ordre des IDs demandés. */
 public class GetEventsByIdsUseCase implements GetEventsByIds {
 
+    /** Au-delà, la requête SQL (IN ...) devient démesurée : on refuse plutôt que de tout charger. */
+    public static final int MAX_IDS = 100;
+
     private final EventReadModel events;
 
     public GetEventsByIdsUseCase(EventReadModel events) {
@@ -24,6 +27,9 @@ public class GetEventsByIdsUseCase implements GetEventsByIds {
         List<String> requestedIds = ids.stream().distinct().toList();
         if (requestedIds.isEmpty()) {
             return List.of();
+        }
+        if (requestedIds.size() > MAX_IDS) {
+            throw new IllegalArgumentException("Au plus " + MAX_IDS + " événements par requête");
         }
 
         Map<String, EventView> eventsById = new HashMap<>();
