@@ -66,6 +66,10 @@ class RequestBookingUseCaseTest {
         public void giveBack(List<BookingLine> lines) {
             lines.forEach(l -> available.merge(l.ticketId(), l.quantity(), Integer::sum));
         }
+
+        @Override
+        public void refresh(Collection<String> ticketIds) {
+        }
     }
 
     /** Faux repository : garde chaque état enregistré pour vérifier la séquence de statuts. */

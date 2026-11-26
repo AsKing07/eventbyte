@@ -172,6 +172,9 @@ Array<{
 ```typescript
 Array<Event>  // Même structure qu'un événement unique
 ```
+Les IDs absents et les événements supprimés sont ignorés. Les résultats suivent
+l'ordre des IDs fournis ; les IDs répétés ne produisent pas de doublons. Les
+événements sans date de début sont exclus, car le frontend exige `startAt`.
 
 ---
 
