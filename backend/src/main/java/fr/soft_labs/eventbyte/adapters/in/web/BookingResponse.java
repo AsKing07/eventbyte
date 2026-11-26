@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.adapters.in.web;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import fr.soft_labs.eventbyte.domain.booking.Booking;
 import fr.soft_labs.eventbyte.domain.booking.BookingLine;
 import fr.soft_labs.eventbyte.domain.booking.BookingStatus;
@@ -9,7 +10,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
-/** Représentation publique d'une réservation, partagée par les réponses et le flux SSE. */
+/**
+ * Représentation publique d'une réservation (format README), partagée par le flux SSE et GET /bookings (US-15).
+ * Statut en minuscules avec tiret, montants en euros (EB-28).
+ * clientSecret ABSENT du JSON tant qu'il n'existe pas : le schéma zod du front l'accepte absent, pas null,
+ * et rejetterait tout l'événement.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 record BookingResponse(String id,
                        String eventId,
                        Instant bookedAt,
@@ -38,7 +45,7 @@ record BookingResponse(String id,
                 booking.clientSecret());
     }
 
-    private static String apiStatus(BookingStatus status) {
+    static String apiStatus(BookingStatus status) {
         return status.name().toLowerCase(Locale.ROOT).replace('_', '-');
     }
 }

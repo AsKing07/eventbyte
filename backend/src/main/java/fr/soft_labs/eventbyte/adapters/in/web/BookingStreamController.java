@@ -9,12 +9,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** Adaptateur SSE : l'identité vient exclusivement du JWT validé par Spring Security. */
 @RestController
 class BookingStreamController {
+
+    /**
+     * Sans valeur explicite, le serveur coupe le flux au bout de ~30 s (délai async par défaut de Tomcat).
+     * Le front fourni ferme sa connexion à la première erreur : la confirmation n'arriverait jamais.
+     * 30 min couvrent largement les 10 min de paiement.
+     */
+    static final Duration STREAM_TIMEOUT = Duration.ofMinutes(30);
 
     private final SubscribeToBookingUpdates bookingUpdates;
 
@@ -24,7 +32,7 @@ class BookingStreamController {
 
     @GetMapping(path = "/bookings/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     SseEmitter stream(@CurrentUser UserId userId) {
-        SseEmitter emitter = new SseEmitter();
+        SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT.toMillis());
         AtomicReference<Subscription> subscriptionReference = new AtomicReference<>();
         AtomicBoolean cleanupRequested = new AtomicBoolean();
         Runnable unsubscribe = () -> {
