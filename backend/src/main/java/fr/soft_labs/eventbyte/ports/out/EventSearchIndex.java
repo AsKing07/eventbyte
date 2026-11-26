@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.ports.out;
 
+import fr.soft_labs.eventbyte.domain.event.DiscoveryCriteria;
 import fr.soft_labs.eventbyte.domain.event.Event;
 import fr.soft_labs.eventbyte.domain.event.SearchCriteria;
 
@@ -19,4 +20,7 @@ public interface EventSearchIndex {
 
     /** Ids des événements correspondants, dans l'ordre de pertinence. */
     List<String> search(SearchCriteria criteria);
+
+    /** Ids des événements à venir dans le rayon de découverte, du plus proche au plus lointain dans le temps. */
+    List<String> discover(DiscoveryCriteria criteria);
 }

@@ -1,6 +1,7 @@
 package fr.soft_labs.eventbyte.config;
 
 import fr.soft_labs.eventbyte.ports.in.ConfirmPayment;
+import fr.soft_labs.eventbyte.ports.in.DiscoverEvents;
 import fr.soft_labs.eventbyte.ports.in.GetEventTickets;
 import fr.soft_labs.eventbyte.ports.in.GetEventsByIds;
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
@@ -21,6 +22,7 @@ import fr.soft_labs.eventbyte.ports.out.ProcessedPayments;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.ConfirmPaymentUseCase;
+import fr.soft_labs.eventbyte.usecases.DiscoverEventsUseCase;
 import fr.soft_labs.eventbyte.usecases.GetEventTicketsUseCase;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
 import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
@@ -56,6 +58,11 @@ public class UseCaseConfig {
     @Bean
     SearchEvents searchEvents(EventSearchIndex eventSearchIndex, EventReadModel eventReadModel) {
         return new SearchEventsUseCase(eventSearchIndex, eventReadModel);
+    }
+
+    @Bean
+    DiscoverEvents discoverEvents(EventSearchIndex eventSearchIndex, EventReadModel eventReadModel, Clock clock) {
+        return new DiscoverEventsUseCase(eventSearchIndex, eventReadModel, clock);
     }
 
     @Bean
