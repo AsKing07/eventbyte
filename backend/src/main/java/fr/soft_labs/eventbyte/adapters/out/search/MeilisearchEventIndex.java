@@ -6,6 +6,7 @@ import com.meilisearch.sdk.Client;
 import com.meilisearch.sdk.Index;
 import com.meilisearch.sdk.SearchRequest;
 import com.meilisearch.sdk.model.Settings;
+import fr.soft_labs.eventbyte.domain.event.DiscoveryCriteria;
 import fr.soft_labs.eventbyte.domain.event.Event;
 import fr.soft_labs.eventbyte.domain.event.SearchCriteria;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
@@ -16,13 +17,15 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Index Meilisearch des événements. Un document = les champs cherchables + la position "_geo".
+ * Index Meilisearch des événements. Un document = les champs cherchables + la position "_geo"
+ * + "startAt" en secondes epoch (absent si l'événement n'a pas de date).
  * Meilisearch traite les écritures en tâche de fond : un événement est cherchable
  * quelques millisecondes après son ingestion.
  */
@@ -57,8 +60,8 @@ class MeilisearchEventIndex implements EventSearchIndex {
         try {
             Settings settings = new Settings();
             settings.setSearchableAttributes(new String[]{"title", "description", "venueName", "venueAddress"});
-            settings.setFilterableAttributes(new String[]{"_geo"});
-            settings.setSortableAttributes(new String[]{"_geo"});
+            settings.setFilterableAttributes(new String[]{"_geo", "startAt"});
+            settings.setSortableAttributes(new String[]{"_geo", "startAt"});
             index().updateSettings(settings);
         } catch (Exception e) {
             LOG.warn("Configuration de l'index Meilisearch '{}' impossible : {}", indexName, e.getMessage());
@@ -67,14 +70,17 @@ class MeilisearchEventIndex implements EventSearchIndex {
 
     @Override
     public void index(Event event) {
-        Map<String, Object> document = Map.of(
+        Map<String, Object> document = new HashMap<>(Map.of(
                 "id", event.id(),
                 "title", event.title(),
                 "description", event.description(),
                 "venueName", event.venue().name(),
                 "venueAddress", event.venue().address(),
                 "_geo", Map.of("lat", event.venue().coordinates().latitude(),
-                               "lng", event.venue().coordinates().longitude()));
+                               "lng", event.venue().coordinates().longitude())));
+        if (event.startAt() != null) {
+            document.put("startAt", event.startAt().getEpochSecond());
+        }
         try {
             index().addDocuments(objectMapper.writeValueAsString(List.of(document)), "id");
         } catch (JsonProcessingException e) {
@@ -105,8 +111,24 @@ class MeilisearchEventIndex implements EventSearchIndex {
             request.sort(new String[]{String.format(Locale.ROOT, "_geoPoint(%s, %s):asc",
                     criteria.center().latitude(), criteria.center().longitude())});
         }
+        return ids(request.build());
+    }
+
+    /** Découverte (EB-36) : rayon fixe, événements à venir, triés par date de début. */
+    @Override
+    public List<String> discover(DiscoveryCriteria criteria) {
+        return ids(SearchRequest.builder()
+                .q("")
+                .filter(new String[]{discoveryFilter(criteria)})
+                .sort(new String[]{"startAt:asc"})
+                .attributesToRetrieve(new String[]{"id"})
+                .limit(DiscoveryCriteria.MAX_RESULTS)
+                .build());
+    }
+
+    private List<String> ids(SearchRequest request) {
         try {
-            return index().search(request.build()).getHits().stream()
+            return index().search(request).getHits().stream()
                     .map(hit -> Objects.toString(hit.get("id"), null))
                     .filter(Objects::nonNull)
                     .toList();
@@ -117,8 +139,16 @@ class MeilisearchEventIndex implements EventSearchIndex {
 
     /** Filtre Meilisearch : _geoRadius(lat, lng, distance en mètres). Locale.ROOT pour le point décimal. */
     static String geoRadius(SearchCriteria criteria) {
-        return String.format(Locale.ROOT, "_geoRadius(%s, %s, %d)",
-                criteria.center().latitude(), criteria.center().longitude(),
-                Math.round(criteria.radiusKm() * 1000));
+        return geoRadius(criteria.center().latitude(), criteria.center().longitude(), criteria.radiusKm());
+    }
+
+    /** Filtre de la découverte : dans le rayon ET à venir (un document sans startAt ne passe pas le filtre). */
+    static String discoveryFilter(DiscoveryCriteria criteria) {
+        return geoRadius(criteria.center().latitude(), criteria.center().longitude(), DiscoveryCriteria.RADIUS_KM)
+                + " AND startAt >= " + criteria.startingFrom().getEpochSecond();
+    }
+
+    private static String geoRadius(double latitude, double longitude, double radiusKm) {
+        return String.format(Locale.ROOT, "_geoRadius(%s, %s, %d)", latitude, longitude, Math.round(radiusKm * 1000));
     }
 }

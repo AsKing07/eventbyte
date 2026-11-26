@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.usecases;
 
+import fr.soft_labs.eventbyte.domain.event.DiscoveryCriteria;
 import fr.soft_labs.eventbyte.domain.event.Event;
 import fr.soft_labs.eventbyte.domain.event.SearchCriteria;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
@@ -16,6 +17,7 @@ class InMemoryEventSearchIndex implements EventSearchIndex {
     final List<String> removed = new ArrayList<>();
     List<String> nextResults = List.of();
     SearchCriteria lastCriteria;
+    DiscoveryCriteria lastDiscovery;
 
     @Override
     public void index(Event event) {
@@ -31,6 +33,12 @@ class InMemoryEventSearchIndex implements EventSearchIndex {
     @Override
     public List<String> search(SearchCriteria criteria) {
         lastCriteria = criteria;
+        return nextResults;
+    }
+
+    @Override
+    public List<String> discover(DiscoveryCriteria criteria) {
+        lastDiscovery = criteria;
         return nextResults;
     }
 }
