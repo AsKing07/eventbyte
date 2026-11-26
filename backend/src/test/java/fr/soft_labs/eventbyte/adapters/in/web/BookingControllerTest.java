@@ -6,6 +6,7 @@ import fr.soft_labs.eventbyte.domain.UserId;
 import fr.soft_labs.eventbyte.domain.booking.Booking;
 import fr.soft_labs.eventbyte.domain.booking.BookingLine;
 import fr.soft_labs.eventbyte.domain.booking.RequestedItem;
+import fr.soft_labs.eventbyte.ports.in.ViewBookings;
 import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,10 @@ class BookingControllerTest {
 
     @MockitoBean
     RequestBooking requestBooking;
+
+    /** Le contrôleur sert aussi la consultation (US-15) : il faut ce port pour le construire. */
+    @MockitoBean
+    ViewBookings viewBookings;
 
     @MockitoBean
     JwtDecoder jwtDecoder;

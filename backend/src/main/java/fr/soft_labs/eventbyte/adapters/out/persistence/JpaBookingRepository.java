@@ -92,6 +92,14 @@ class JpaBookingRepository implements BookingRepository {
                 booking.clientSecret(), clock.instant()) == 1;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Booking> findByUser(UserId userId) {
+        return jpa.findByUserIdOrderByBookedAtDesc(userId.value()).stream()
+                .map(JpaBookingRepository::toDomain)
+                .toList();
+    }
+
     static Booking toDomain(BookingEntity e) {
         return new Booking(
                 e.getId(),

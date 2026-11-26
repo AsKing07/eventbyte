@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.adapters.in.web;
 
+import fr.soft_labs.eventbyte.domain.booking.BookingNotFoundException;
 import fr.soft_labs.eventbyte.domain.booking.PaymentUnavailableException;
 import fr.soft_labs.eventbyte.domain.event.EventNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,12 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(EventNotFoundException.class)
     ProblemDetail notFound(EventNotFoundException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    /** Absente ou à un autre utilisateur : même 404, sans dire laquelle (US-15). */
+    @ExceptionHandler(BookingNotFoundException.class)
+    ProblemDetail bookingNotFound(BookingNotFoundException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
