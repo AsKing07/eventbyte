@@ -75,18 +75,11 @@ class RedisTicketStock implements TicketStock {
         return Long.valueOf(1).equals(taken);
     }
 
+    /** Lecture seule côté client, mais initialise la clé si besoin (setIfAbsent : sans risque face aux réservations). */
     @Override
     public int available(String ticketId) {
         initializeIfAbsent(ticketId);
-        String value = redis.opsForValue().get(key(ticketId));
-        if (value == null) {
-            initializeIfAbsent(ticketId);
-            value = redis.opsForValue().get(key(ticketId));
-        }
-        if (value == null) {
-            throw new IllegalStateException("Stock Redis introuvable pour le ticket " + ticketId);
-        }
-        return Math.toIntExact(Long.parseLong(value));
+        return Integer.parseInt(redis.opsForValue().get(key(ticketId)));
     }
 
     @Override
