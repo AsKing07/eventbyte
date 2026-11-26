@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.ports.out;
 
+import fr.soft_labs.eventbyte.domain.UserId;
 import fr.soft_labs.eventbyte.domain.booking.Booking;
 import fr.soft_labs.eventbyte.domain.booking.BookingStatus;
 
@@ -13,6 +14,9 @@ public interface BookingRepository {
     void save(Booking booking);
 
     Optional<Booking> findById(String bookingId);
+
+    /** Réservations de cet utilisateur, la plus récente d'abord (US-15). */
+    List<Booking> findByUser(UserId userId);
 
     List<Booking> findUnpaidBookingsPastDeadline(Instant cutoff);
 

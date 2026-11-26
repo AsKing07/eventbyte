@@ -13,6 +13,7 @@ import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
 import fr.soft_labs.eventbyte.ports.in.StartPayment;
 import fr.soft_labs.eventbyte.ports.in.UnlikeEvent;
+import fr.soft_labs.eventbyte.ports.in.ViewBookings;
 import fr.soft_labs.eventbyte.ports.out.BookingUpdatePublisher;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
@@ -37,6 +38,7 @@ import fr.soft_labs.eventbyte.usecases.RequestBookingUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
 import fr.soft_labs.eventbyte.usecases.StartPaymentUseCase;
 import fr.soft_labs.eventbyte.usecases.UnlikeEventUseCase;
+import fr.soft_labs.eventbyte.usecases.ViewBookingsUseCase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -138,5 +140,10 @@ public class UseCaseConfig {
                                               BookingUpdatePublisher bookingUpdates) {
         return new ExpireUnpaidBookingsUseCase(bookingRepository, ticketStock, clock, expirationDelay,
                 bookingUpdates);
+    }
+
+    @Bean
+    ViewBookings viewBookings(BookingRepository bookingRepository) {
+        return new ViewBookingsUseCase(bookingRepository);
     }
 }

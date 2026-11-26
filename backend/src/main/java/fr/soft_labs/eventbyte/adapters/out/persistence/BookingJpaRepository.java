@@ -12,6 +12,8 @@ import java.util.List;
 
 interface BookingJpaRepository extends JpaRepository<BookingEntity, String> {
 
+    List<BookingEntity> findByUserIdOrderByBookedAtDesc(String userId);
+
     List<BookingEntity> findByStatusInAndBookedAtLessThanEqualOrderByBookedAtAsc(
             Collection<BookingStatus> statuses, Instant cutoff);
 

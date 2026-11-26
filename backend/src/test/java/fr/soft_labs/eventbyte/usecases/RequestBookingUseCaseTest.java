@@ -105,6 +105,14 @@ class RequestBookingUseCaseTest {
         }
 
         @Override
+        public List<Booking> findByUser(UserId userId) {
+            return bookings.values().stream()
+                    .filter(booking -> booking.belongsTo(userId))
+                    .sorted(java.util.Comparator.comparing(Booking::bookedAt).reversed())
+                    .toList();
+        }
+
+        @Override
         public List<Booking> findUnpaidBookingsPastDeadline(Instant cutoff) {
             return bookings.values().stream()
                     .filter(b -> (b.status() == BookingStatus.RESERVED || b.status() == BookingStatus.AWAITING_PAYMENT)
