@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.config;
 
+import fr.soft_labs.eventbyte.ports.in.ConfirmPayment;
 import fr.soft_labs.eventbyte.ports.in.GetEventTickets;
 import fr.soft_labs.eventbyte.ports.in.GetEventsByIds;
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
@@ -16,8 +17,10 @@ import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
 import fr.soft_labs.eventbyte.usecases.GetEventsByIdsUseCase;
 import fr.soft_labs.eventbyte.ports.out.LikeRepository;
 import fr.soft_labs.eventbyte.ports.out.PaymentGateway;
+import fr.soft_labs.eventbyte.ports.out.ProcessedPayments;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
+import fr.soft_labs.eventbyte.usecases.ConfirmPaymentUseCase;
 import fr.soft_labs.eventbyte.usecases.GetEventTicketsUseCase;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
 import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
@@ -92,5 +95,11 @@ public class UseCaseConfig {
     GetEventTickets getEventTickets(EventRepository eventRepository, TicketCatalog ticketCatalog,
                                     TicketStock ticketStock) {
         return new GetEventTicketsUseCase(eventRepository, ticketCatalog, ticketStock);
+    }
+
+    @Bean
+    ConfirmPayment confirmPayment(BookingRepository bookingRepository, TicketStock ticketStock,
+                                  PaymentGateway paymentGateway, ProcessedPayments processedPayments) {
+        return new ConfirmPaymentUseCase(bookingRepository, ticketStock, paymentGateway, processedPayments);
     }
 }

@@ -85,6 +85,23 @@ class BookingTest {
     }
 
     @Test
+    void confirme_depuis_reserved_ou_awaiting_payment() {
+        Booking reserved = requested(new BookingLine("a", "S", 1, 100)).reserve();
+
+        assertThat(reserved.confirm().status()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThat(reserved.awaitPayment("pi_secret").confirm().status()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThatThrownBy(() -> reserved.expire().confirm()).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void la_confirmation_tardive_ne_vaut_que_pour_une_reservation_expiree() {
+        Booking reserved = requested(new BookingLine("a", "S", 1, 100)).reserve();
+
+        assertThat(reserved.expire().confirmLate().status()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThatThrownBy(reserved::confirmLate).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     void sait_a_qui_elle_appartient() {
         Booking booking = requested(new BookingLine("a", "S", 1, 100));
 

@@ -12,4 +12,10 @@ public interface PaymentGateway {
      * @throws fr.soft_labs.eventbyte.domain.booking.PaymentUnavailableException si le prestataire refuse ou ne répond pas
      */
     String createPaymentIntent(String bookingId, long amountInCents);
+
+    /**
+     * Rembourse intégralement ce paiement (paiement reçu alors que les places ne sont plus disponibles).
+     * Appelée deux fois pour le même paiement, elle ne rembourse qu'une fois.
+     */
+    void refund(String paymentIntentId);
 }

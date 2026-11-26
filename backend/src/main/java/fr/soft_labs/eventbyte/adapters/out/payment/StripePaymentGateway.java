@@ -2,8 +2,10 @@ package fr.soft_labs.eventbyte.adapters.out.payment;
 
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.RefundCreateParams;
 import fr.soft_labs.eventbyte.domain.booking.PaymentUnavailableException;
 import fr.soft_labs.eventbyte.ports.out.PaymentGateway;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +26,7 @@ class StripePaymentGateway implements PaymentGateway {
 
     @Override
     public String createPaymentIntent(String bookingId, long amountInCents) {
-        if (!StringUtils.hasText(secretKey)) {
-            throw new PaymentUnavailableException("STRIPE_SECRET_KEY n'est pas configurée");
-        }
+requireSecretKey();
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
                 .setAmount(amountInCents)
                 .setCurrency(currency)
@@ -45,6 +45,27 @@ class StripePaymentGateway implements PaymentGateway {
             return PaymentIntent.create(params, options).getClientSecret();
         } catch (StripeException e) {
             throw new PaymentUnavailableException("Stripe a refusé la création du paiement : " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void refund(String paymentIntentId) {
+        requireSecretKey();
+        RefundCreateParams params = RefundCreateParams.builder().setPaymentIntent(paymentIntentId).build();
+        RequestOptions options = RequestOptions.builder()
+                .setApiKey(secretKey)
+                .setIdempotencyKey("refund-" + paymentIntentId)   // jamais deux remboursements du même paiement
+                .build();
+        try {
+            Refund.create(params, options);
+        } catch (StripeException e) {
+            throw new PaymentUnavailableException("Stripe a refusé le remboursement : " + e.getMessage(), e);
+        }
+    }
+
+    private void requireSecretKey() {
+        if (!StringUtils.hasText(secretKey)) {
+            throw new PaymentUnavailableException("STRIPE_SECRET_KEY n'est pas configurée");
         }
     }
 }

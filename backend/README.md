@@ -53,6 +53,8 @@ Les secrets passent uniquement par variables d'environnement, jamais dans le dé
 - `STRIPE_SECRET_KEY` : clé secrète Stripe de test (`sk_test_...`, dashboard Stripe > Développeurs > Clés API).
   Sans elle, l'application démarre mais `POST /bookings` répond 503 au moment du paiement (places rendues).
   Les tests n'appellent jamais Stripe (`FakePaymentConfiguration`).
+- `STRIPE_WEBHOOK_SECRET` : secret de signature du webhook (`whsec_...`). En local, il est affiché par
+  `stripe listen --forward-to localhost:3000/payments/stripe/webhook` (Stripe CLI, à laisser tourner pendant la démo).
 
 ## Écarts avec le sujet et décisions
 
@@ -71,6 +73,7 @@ Le détail et les preuves sont dans les tickets Jira `decision-spec`.
 | Passage requested → reserved (EB-35) | Asynchrone suggéré | Le front affiche « en cours » pour requested et reserved, le paiement seulement en awaiting-payment | Traitement synchrone dans `POST /bookings`, stock pris atomiquement dans Redis (script Lua, tout ou rien) |
 | Quantité modifiée dans Strapi (EB-30) | — | Le stock Redis gardait l'ancienne valeur : survente possible si l'organisateur baisse la quantité | À chaque `event.updated`, les clés Redis des tickets sont supprimées puis recalculées depuis la base ; sous le déjà-réservé : disponible 0, rien n'est annulé |
 | Paiement (US-16) | Pas de route « payer » côté backend | Le front affiche Stripe dès que la réservation est en `awaiting-payment` avec un `clientSecret` | `POST /bookings` enchaîne réservation puis PaymentIntent (montant = tickets + frais, en centimes, devise EUR) ; clé d'idempotence = id de réservation ; si Stripe échoue : places rendues, réservation `expired`, réponse 503 |
+| Paiement après expiration (EB-33) | — | Stripe peut confirmer un paiement après l'expiration de la réservation | On reprend les places si elles sont encore libres (réservation confirmée), sinon remboursement automatique (réservation reste `expired`). Un même paiement n'est traité qu'une fois (table `processed_payments`) |
 | Coordonnées du lieu | Utilisées pour la recherche géographique | Facultatives dans Strapi : le hook plante (`reading 'lat'`) et aucun message n'est envoyé | Toujours renseigner la position ; correction possible : `required: true` dans `venue.json` |
 | Ordre des messages | — | L'outbox Strapi n'a pas d'`ORDER BY` et republie les échecs plus tard | Ingestion idempotente ; un événement supprimé ne revient pas |
 | Messages publiés avant le 1er démarrage du backend | — | Exchange topic sans file : messages perdus | Démarrer le backend avant le seed ; rejeu possible via `strapi.outbox_events` |

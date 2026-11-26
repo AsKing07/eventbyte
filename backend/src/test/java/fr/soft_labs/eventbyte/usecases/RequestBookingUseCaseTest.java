@@ -77,10 +77,11 @@ class RequestBookingUseCaseTest {
         final List<BookingStatus> savedStatuses = new ArrayList<>();
         final Map<String, Booking> bookings = new HashMap<>();
         boolean failOnReserved;
+        boolean failOnSave;
 
         @Override
         public void save(Booking booking) {
-            if (failOnReserved && booking.status() == BookingStatus.RESERVED) {
+            if (failOnSave || failOnReserved && booking.status() == BookingStatus.RESERVED) {
                 throw new IllegalStateException("base indisponible");
             }
             savedStatuses.add(booking.status());

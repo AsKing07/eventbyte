@@ -67,6 +67,25 @@ public record Booking(String id,
         return new Booking(id, userId, eventId, bookedAt, lines, BookingStatus.AWAITING_PAYMENT, paymentClientSecret);
     }
 
+    /** Paiement reçu (US-17) : les places sont tenues depuis reserved / awaiting-payment. */
+    public Booking confirm() {
+        if (status != BookingStatus.RESERVED && status != BookingStatus.AWAITING_PAYMENT) {
+            throw new IllegalStateException("Réservation " + id + " : passage " + status + " -> CONFIRMED impossible");
+        }
+        return new Booking(id, userId, eventId, bookedAt, lines, BookingStatus.CONFIRMED, clientSecret);
+    }
+
+    /**
+     * Paiement reçu après l'expiration (EB-33). À n'appeler qu'une fois les places reprises dans le stock :
+     * une réservation expirée ne tient plus aucune place.
+     */
+    public Booking confirmLate() {
+        if (status != BookingStatus.EXPIRED) {
+            throw new IllegalStateException("Réservation " + id + " : confirmation tardive depuis " + status + " impossible");
+        }
+        return new Booking(id, userId, eventId, bookedAt, lines, BookingStatus.CONFIRMED, clientSecret);
+    }
+
     /** Réservation abandonnée avant paiement (paiement impossible, délai dépassé) : ses places doivent être rendues. */
     public Booking expire() {
         if (status != BookingStatus.RESERVED && status != BookingStatus.AWAITING_PAYMENT) {

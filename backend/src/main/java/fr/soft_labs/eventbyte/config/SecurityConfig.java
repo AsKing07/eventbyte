@@ -40,7 +40,9 @@ public class SecurityConfig {
                 // Routes publiques : discover, détail, lots, recherche, tickets
                 .requestMatchers(HttpMethod.GET, "/events", "/events/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-                // Tout le reste est fermé par défaut (le webhook Stripe sera ouvert avec US-17)
+                // Webhook Stripe (US-17) : pas de JWT, l'appel est authentifié par la signature Stripe-Signature
+                .requestMatchers(HttpMethod.POST, "/payments/stripe/webhook").permitAll()
+                // Tout le reste est fermé par défaut
                 .anyRequest().authenticated())
             .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));
         return http.build();
