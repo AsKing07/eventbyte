@@ -56,7 +56,7 @@ class StartPaymentUseCaseTest {
         stock = new RequestBookingUseCaseTest.FakeStock();
         stock.available.putAll(Map.of("tkt_std", 78, "tkt_vip", 0));   // places déjà prises par la réservation
         payments = new FakePaymentGateway();
-        useCase = new StartPaymentUseCase(repository, payments, stock);
+        useCase = new StartPaymentUseCase(repository, payments, stock, new BookingUpdatesUseCase());
     }
 
     /** 2 Standard à 22 € + 1 VIP à 35,50 € : 79,50 € de tickets + 3 x 0,30 € de frais = 80,40 €. */

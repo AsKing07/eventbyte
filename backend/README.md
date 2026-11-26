@@ -43,6 +43,14 @@ fr.soft_labs.eventbyte
 Les dépendances pointent vers le centre : `adapters → ports/usecases → domain`.
 Les entités JPA et les DTO restent dans `adapters`, jamais dans `domain`.
 
+### Flux des changements de réservation (US-18)
+
+`GET /bookings/stream` est un flux SSE authentifié. Le JWT fournit l'identité de l'abonné ;
+le cas d'usage diffuse chaque réservation uniquement aux connexions de son propriétaire.
+Les transitions enregistrées par les cas d'usage de réservation, paiement et expiration
+produisent un événement `booking_updated`. La diffusion en mémoire convient à une instance ;
+plusieurs instances backend nécessiteraient un canal de diffusion partagé.
+
 ## Configuration
 
 Toutes les valeurs par défaut de `application.yml` correspondent au `docker-compose.yml`.

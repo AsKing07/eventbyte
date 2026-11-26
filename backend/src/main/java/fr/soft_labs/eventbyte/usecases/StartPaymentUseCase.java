@@ -4,6 +4,7 @@ import fr.soft_labs.eventbyte.domain.booking.Booking;
 import fr.soft_labs.eventbyte.domain.booking.BookingStatus;
 import fr.soft_labs.eventbyte.domain.booking.PaymentUnavailableException;
 import fr.soft_labs.eventbyte.ports.in.StartPayment;
+import fr.soft_labs.eventbyte.ports.out.BookingUpdatePublisher;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.PaymentGateway;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
@@ -22,11 +23,14 @@ public class StartPaymentUseCase implements StartPayment {
     private final BookingRepository bookings;
     private final PaymentGateway payments;
     private final TicketStock stock;
+    private final BookingUpdatePublisher bookingUpdates;
 
-    public StartPaymentUseCase(BookingRepository bookings, PaymentGateway payments, TicketStock stock) {
+    public StartPaymentUseCase(BookingRepository bookings, PaymentGateway payments, TicketStock stock,
+                               BookingUpdatePublisher bookingUpdates) {
         this.bookings = Objects.requireNonNull(bookings);
         this.payments = Objects.requireNonNull(payments);
         this.stock = Objects.requireNonNull(stock);
+        this.bookingUpdates = Objects.requireNonNull(bookingUpdates);
     }
 
     @Override
@@ -45,7 +49,9 @@ public class StartPaymentUseCase implements StartPayment {
             clientSecret = payments.createPaymentIntent(booking.id(), booking.totalInCents());
         } catch (RuntimeException e) {
             stock.giveBack(booking.lines());
-            bookings.save(booking.expire());
+            Booking expired = booking.expire();
+            bookings.save(expired);
+            bookingUpdates.publish(expired);
             throw e instanceof PaymentUnavailableException unavailable
                     ? unavailable
                     : new PaymentUnavailableException("Paiement indisponible pour la réservation " + bookingId, e);
@@ -54,6 +60,7 @@ public class StartPaymentUseCase implements StartPayment {
         // Si cet enregistrement échoue, la réservation reste reserved : l'expiration (US-14) rendra les places.
         Booking awaiting = booking.awaitPayment(clientSecret);
         if (bookings.updateIfStatus(awaiting, BookingStatus.RESERVED)) {
+            bookingUpdates.publish(awaiting);
             return awaiting;
         }
         return bookings.findById(bookingId)

@@ -50,7 +50,7 @@ class ConfirmPaymentUseCaseTest {
         stock = new RequestBookingUseCaseTest.FakeStock();
         payments = new StartPaymentUseCaseTest.FakePaymentGateway();
         processed = new InMemoryProcessedPayments();
-        useCase = new ConfirmPaymentUseCase(bookings, stock, payments, processed);
+        useCase = new ConfirmPaymentUseCase(bookings, stock, payments, processed, new BookingUpdatesUseCase());
     }
 
     /** 2 places Standard, déjà en attente de paiement. */

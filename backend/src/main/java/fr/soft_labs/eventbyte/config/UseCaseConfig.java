@@ -13,6 +13,7 @@ import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
 import fr.soft_labs.eventbyte.ports.in.StartPayment;
 import fr.soft_labs.eventbyte.ports.in.UnlikeEvent;
+import fr.soft_labs.eventbyte.ports.out.BookingUpdatePublisher;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
@@ -23,6 +24,7 @@ import fr.soft_labs.eventbyte.ports.out.ProcessedPayments;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.ConfirmPaymentUseCase;
+import fr.soft_labs.eventbyte.usecases.BookingUpdatesUseCase;
 import fr.soft_labs.eventbyte.usecases.ExpireUnpaidBookingsUseCase;
 import fr.soft_labs.eventbyte.usecases.GetEventByIdUseCase;
 import fr.soft_labs.eventbyte.usecases.DiscoverEventsUseCase;
@@ -53,6 +55,11 @@ public class UseCaseConfig {
     @Bean
     Clock clock() {
         return Clock.systemUTC();
+    }
+
+    @Bean
+    BookingUpdatesUseCase bookingUpdatesUseCase() {
+        return new BookingUpdatesUseCase();
     }
 
     @Bean
@@ -98,15 +105,16 @@ public class UseCaseConfig {
 
     @Bean
     StartPayment startPayment(BookingRepository bookingRepository, PaymentGateway paymentGateway,
-                              TicketStock ticketStock) {
-        return new StartPaymentUseCase(bookingRepository, paymentGateway, ticketStock);
+                              TicketStock ticketStock, BookingUpdatePublisher bookingUpdates) {
+        return new StartPaymentUseCase(bookingRepository, paymentGateway, ticketStock, bookingUpdates);
     }
 
     @Bean
     RequestBooking requestBooking(TicketCatalog ticketCatalog, TicketStock ticketStock,
-                                  BookingRepository bookingRepository, Clock clock, StartPayment startPayment) {
+                                  BookingRepository bookingRepository, Clock clock, StartPayment startPayment,
+                                  BookingUpdatePublisher bookingUpdates) {
         return new RequestBookingUseCase(ticketCatalog, ticketStock, bookingRepository,
-                () -> UUID.randomUUID().toString(), clock, startPayment);
+                () -> UUID.randomUUID().toString(), clock, startPayment, bookingUpdates);
     }
 
     @Bean
@@ -117,14 +125,18 @@ public class UseCaseConfig {
 
     @Bean
     ConfirmPayment confirmPayment(BookingRepository bookingRepository, TicketStock ticketStock,
-                                  PaymentGateway paymentGateway, ProcessedPayments processedPayments) {
-        return new ConfirmPaymentUseCase(bookingRepository, ticketStock, paymentGateway, processedPayments);
+                                  PaymentGateway paymentGateway, ProcessedPayments processedPayments,
+                                  BookingUpdatePublisher bookingUpdates) {
+        return new ConfirmPaymentUseCase(bookingRepository, ticketStock, paymentGateway, processedPayments,
+                bookingUpdates);
     }
 
     @Bean
     ExpireUnpaidBookings expireUnpaidBookings(BookingRepository bookingRepository, TicketStock ticketStock,
                                               Clock clock,
-                                              @Value("${eventbyte.booking.expiration-delay:10m}") Duration expirationDelay) {
-        return new ExpireUnpaidBookingsUseCase(bookingRepository, ticketStock, clock, expirationDelay);
+                                              @Value("${eventbyte.booking.expiration-delay:10m}") Duration expirationDelay,
+                                              BookingUpdatePublisher bookingUpdates) {
+        return new ExpireUnpaidBookingsUseCase(bookingRepository, ticketStock, clock, expirationDelay,
+                bookingUpdates);
     }
 }

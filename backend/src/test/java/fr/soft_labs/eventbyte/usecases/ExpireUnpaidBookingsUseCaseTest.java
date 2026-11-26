@@ -99,7 +99,8 @@ class ExpireUnpaidBookingsUseCaseTest {
             RequestBookingUseCaseTest.RecordingRepository repository,
             RequestBookingUseCaseTest.FakeStock stock,
             Instant now) {
-        return new ExpireUnpaidBookingsUseCase(repository, stock, Clock.fixed(now, ZoneOffset.UTC), EXPIRATION_DELAY);
+        return new ExpireUnpaidBookingsUseCase(repository, stock, Clock.fixed(now, ZoneOffset.UTC),
+                EXPIRATION_DELAY, new BookingUpdatesUseCase());
     }
 
     private static Booking unpaidBooking() {

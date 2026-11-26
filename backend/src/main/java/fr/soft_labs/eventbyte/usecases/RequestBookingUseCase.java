@@ -7,6 +7,7 @@ import fr.soft_labs.eventbyte.domain.booking.RequestedItem;
 import fr.soft_labs.eventbyte.domain.booking.TicketOffer;
 import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.StartPayment;
+import fr.soft_labs.eventbyte.ports.out.BookingUpdatePublisher;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
@@ -40,15 +41,18 @@ public class RequestBookingUseCase implements RequestBooking {
     private final Supplier<String> idGenerator;
     private final Clock clock;
     private final StartPayment startPayment;
+    private final BookingUpdatePublisher bookingUpdates;
 
     public RequestBookingUseCase(TicketCatalog catalog, TicketStock stock, BookingRepository bookings,
-                                 Supplier<String> idGenerator, Clock clock, StartPayment startPayment) {
+                                 Supplier<String> idGenerator, Clock clock, StartPayment startPayment,
+                                 BookingUpdatePublisher bookingUpdates) {
         this.catalog = Objects.requireNonNull(catalog);
         this.stock = Objects.requireNonNull(stock);
         this.bookings = Objects.requireNonNull(bookings);
         this.idGenerator = Objects.requireNonNull(idGenerator);
         this.clock = Objects.requireNonNull(clock);
         this.startPayment = Objects.requireNonNull(startPayment);
+        this.bookingUpdates = Objects.requireNonNull(bookingUpdates);
     }
 
     @Override
@@ -63,10 +67,12 @@ public class RequestBookingUseCase implements RequestBooking {
 
         Booking requested = Booking.request(idGenerator.get(), userId, singleEvent(offers), lines, clock.instant());
         bookings.save(requested);
+        bookingUpdates.publish(requested);
 
         if (!stock.tryTake(lines)) {
             Booking rejected = requested.reject();
             bookings.save(rejected);
+            bookingUpdates.publish(rejected);
             return rejected;
         }
         Booking reserved = requested.reserve();
@@ -76,6 +82,7 @@ public class RequestBookingUseCase implements RequestBooking {
             stock.giveBack(lines);   // ne pas perdre de places si l'enregistrement échoue
             throw e;
         }
+        bookingUpdates.publish(reserved);
         return startPayment.startPayment(reserved.id());
     }
 

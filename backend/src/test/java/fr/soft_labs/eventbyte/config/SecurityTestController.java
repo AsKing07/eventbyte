@@ -44,4 +44,7 @@ class SecurityTestController {
 
     @GetMapping("/bookings/user")
     String myBookings(@CurrentUser UserId userId) { return userId.value(); }
+
+    @GetMapping("/bookings/stream")
+    String bookingStream(@CurrentUser UserId userId) { return userId.value(); }
 }
