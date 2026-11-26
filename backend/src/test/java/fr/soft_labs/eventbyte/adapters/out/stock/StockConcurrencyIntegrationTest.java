@@ -105,7 +105,7 @@ class StockConcurrencyIntegrationTest {
 
         List<BookingStatus> statuses = concurrently(20, List.of(new RequestedItem(lastTicket, 1)));
 
-        assertThat(count(statuses, BookingStatus.RESERVED)).isEqualTo(1);
+        assertThat(count(statuses, BookingStatus.AWAITING_PAYMENT)).isEqualTo(1);
         assertThat(count(statuses, BookingStatus.REJECTED)).isEqualTo(19);
         assertThat(redis.opsForValue().get("stock:ticket:" + lastTicket)).isEqualTo("0");
     }
@@ -117,7 +117,7 @@ class StockConcurrencyIntegrationTest {
 
         List<BookingStatus> statuses = concurrently(10, oneOfEach);
 
-        assertThat(count(statuses, BookingStatus.RESERVED)).isEqualTo(3);
+        assertThat(count(statuses, BookingStatus.AWAITING_PAYMENT)).isEqualTo(3);
         // Jamais une ligne prise sans l'autre : les deux stocks tombent à 0 ensemble
         assertThat(redis.opsForValue().get("stock:ticket:" + tickets.get(0))).isEqualTo("0");
         assertThat(redis.opsForValue().get("stock:ticket:" + tickets.get(1))).isEqualTo("0");
@@ -147,7 +147,7 @@ class StockConcurrencyIntegrationTest {
         publish("event.created", eventId, ticketId, 10);
         await().atMost(Duration.ofSeconds(10)).until(() ->
                 jdbc.queryForList("select 1 from tickets where id = ?", ticketId).size() == 1);
-        assertThat(book(ticketId, 3)).isEqualTo(BookingStatus.RESERVED);   // stock Redis : 7
+        assertThat(book(ticketId, 3)).isEqualTo(BookingStatus.AWAITING_PAYMENT);   // stock Redis : 7
 
         publish("event.updated", eventId, ticketId, 5);                    // 5 au total, 3 déjà réservées
         await().atMost(Duration.ofSeconds(10)).until(() ->
@@ -155,7 +155,7 @@ class StockConcurrencyIntegrationTest {
                 && !Boolean.TRUE.equals(redis.hasKey(key)));
 
         assertThat(book(ticketId, 3)).isEqualTo(BookingStatus.REJECTED);   // il n'en reste que 2, pas 7
-        assertThat(book(ticketId, 2)).isEqualTo(BookingStatus.RESERVED);
+        assertThat(book(ticketId, 2)).isEqualTo(BookingStatus.AWAITING_PAYMENT);
         assertThat(redis.opsForValue().get(key)).isEqualTo("0");
     }
 
@@ -167,7 +167,7 @@ class StockConcurrencyIntegrationTest {
         publish("event.created", eventId, ticketId, 10);
         await().atMost(Duration.ofSeconds(10)).until(() ->
                 jdbc.queryForList("select 1 from tickets where id = ?", ticketId).size() == 1);
-        assertThat(book(ticketId, 4)).isEqualTo(BookingStatus.RESERVED);
+        assertThat(book(ticketId, 4)).isEqualTo(BookingStatus.AWAITING_PAYMENT);
 
         publish("event.updated", eventId, ticketId, 2);                    // moins que les 4 déjà réservées
         await().atMost(Duration.ofSeconds(10)).until(() ->
@@ -176,6 +176,6 @@ class StockConcurrencyIntegrationTest {
 
         assertThat(book(ticketId, 1)).isEqualTo(BookingStatus.REJECTED);
         assertThat(jdbc.queryForObject("select count(*) from bookings b join booking_lines l on l.booking_id = b.id "
-                + "where l.ticket_id = ? and b.status = 'RESERVED'", Integer.class, ticketId)).isEqualTo(1);   // non annulée
+                + "where l.ticket_id = ? and b.status = 'AWAITING_PAYMENT'", Integer.class, ticketId)).isEqualTo(1);   // non annulée
     }
 }

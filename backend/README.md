@@ -48,7 +48,11 @@ Les entités JPA et les DTO restent dans `adapters`, jamais dans `domain`.
 Toutes les valeurs par défaut de `application.yml` correspondent au `docker-compose.yml`.
 Chacune peut être surchargée par une variable d'environnement
 (`DB_URL`, `RABBITMQ_HOST`, `REDIS_HOST`, `KEYCLOAK_ISSUER_URI`, `MEILISEARCH_HOST`, `SERVER_PORT`…).
-Les secrets (clé Stripe à venir) passent uniquement par variables d'environnement, jamais dans le dépôt.
+Les secrets passent uniquement par variables d'environnement, jamais dans le dépôt :
+
+- `STRIPE_SECRET_KEY` : clé secrète Stripe de test (`sk_test_...`, dashboard Stripe > Développeurs > Clés API).
+  Sans elle, l'application démarre mais `POST /bookings` répond 503 au moment du paiement (places rendues).
+  Les tests n'appellent jamais Stripe (`FakePaymentConfiguration`).
 
 ## Écarts avec le sujet et décisions
 
@@ -65,6 +69,7 @@ Le détail et les preuves sont dans les tickets Jira `decision-spec`.
 | Frais de réservation (EB-34) | `fees` sans règle | Le faux backend du front compte 0,30 € par ticket, total = tickets + frais | Même règle : 30 centimes par ticket (`Booking.FEE_PER_TICKET_IN_CENTS`) |
 | Passage requested → reserved (EB-35) | Asynchrone suggéré | Le front affiche « en cours » pour requested et reserved, le paiement seulement en awaiting-payment | Traitement synchrone dans `POST /bookings`, stock pris atomiquement dans Redis (script Lua, tout ou rien) |
 | Quantité modifiée dans Strapi (EB-30) | — | Le stock Redis gardait l'ancienne valeur : survente possible si l'organisateur baisse la quantité | À chaque `event.updated`, les clés Redis des tickets sont supprimées puis recalculées depuis la base ; sous le déjà-réservé : disponible 0, rien n'est annulé |
+| Paiement (US-16) | Pas de route « payer » côté backend | Le front affiche Stripe dès que la réservation est en `awaiting-payment` avec un `clientSecret` | `POST /bookings` enchaîne réservation puis PaymentIntent (montant = tickets + frais, en centimes, devise EUR) ; clé d'idempotence = id de réservation ; si Stripe échoue : places rendues, réservation `expired`, réponse 503 |
 | Coordonnées du lieu | Utilisées pour la recherche géographique | Facultatives dans Strapi : le hook plante (`reading 'lat'`) et aucun message n'est envoyé | Toujours renseigner la position ; correction possible : `required: true` dans `venue.json` |
 | Ordre des messages | — | L'outbox Strapi n'a pas d'`ORDER BY` et republie les échecs plus tard | Ingestion idempotente ; un événement supprimé ne revient pas |
 | Messages publiés avant le 1er démarrage du backend | — | Exchange topic sans file : messages perdus | Démarrer le backend avant le seed ; rejeu possible via `strapi.outbox_events` |

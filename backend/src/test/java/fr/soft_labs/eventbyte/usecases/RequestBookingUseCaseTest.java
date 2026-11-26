@@ -81,6 +81,7 @@ class RequestBookingUseCaseTest {
 
     FakeStock stock;
     RecordingRepository repository;
+    StartPaymentUseCaseTest.FakePaymentGateway payments;
     RequestBookingUseCase useCase;
 
     @BeforeEach
@@ -91,16 +92,21 @@ class RequestBookingUseCaseTest {
         stock = new FakeStock();
         stock.available.putAll(Map.of("tkt_std", 80, "tkt_vip", 1, "tkt_lyon", 500));
         repository = new RecordingRepository();
-        useCase = new RequestBookingUseCase(catalog, stock, repository, () -> "bk_1", Clock.fixed(NOW, ZoneOffset.UTC));
+        payments = new StartPaymentUseCaseTest.FakePaymentGateway();
+        useCase = new RequestBookingUseCase(catalog, stock, repository, () -> "bk_1", Clock.fixed(NOW, ZoneOffset.UTC),
+                new StartPaymentUseCase(repository, payments, stock));
     }
 
     @Test
-    void stock_suffisant_la_reservation_passe_de_requested_a_reserved() {
+    void stock_suffisant_la_reservation_passe_par_reserved_puis_attend_le_paiement() {
         Booking booking = useCase.book(ALICE, List.of(new RequestedItem("tkt_std", 2)));
 
-        assertThat(booking.status()).isEqualTo(BookingStatus.RESERVED);
-        assertThat(repository.savedStatuses).containsExactly(BookingStatus.REQUESTED, BookingStatus.RESERVED);
+        assertThat(booking.status()).isEqualTo(BookingStatus.AWAITING_PAYMENT);
+        assertThat(booking.clientSecret()).isEqualTo("pi_bk_1_secret_test");
+        assertThat(repository.savedStatuses)
+                .containsExactly(BookingStatus.REQUESTED, BookingStatus.RESERVED, BookingStatus.AWAITING_PAYMENT);
         assertThat(stock.available).containsEntry("tkt_std", 78);
+        assertThat(payments.calls).containsExactly(new StartPaymentUseCaseTest.FakePaymentGateway.Call("bk_1", 2 * 2200 + 60));
     }
 
     @Test
@@ -123,6 +129,7 @@ class RequestBookingUseCaseTest {
         assertThat(booking.status()).isEqualTo(BookingStatus.REJECTED);
         assertThat(repository.savedStatuses).containsExactly(BookingStatus.REQUESTED, BookingStatus.REJECTED);
         assertThat(stock.available).containsEntry("tkt_std", 80).containsEntry("tkt_vip", 1);   // tout ou rien
+        assertThat(payments.calls).isEmpty();   // pas de paiement pour une réservation rejetée
     }
 
     @Test

@@ -56,6 +56,25 @@ public record Booking(String id,
         return from(BookingStatus.REQUESTED, BookingStatus.REJECTED);
     }
 
+    /** reserved -> awaiting-payment, avec le secret du PaymentIntent que le front passe à Stripe (US-16). */
+    public Booking awaitPayment(String paymentClientSecret) {
+        if (paymentClientSecret == null || paymentClientSecret.isBlank()) {
+            throw new IllegalArgumentException("Le clientSecret Stripe est obligatoire");
+        }
+        if (status != BookingStatus.RESERVED) {
+            throw new IllegalStateException("Réservation " + id + " : passage " + status + " -> AWAITING_PAYMENT impossible");
+        }
+        return new Booking(id, userId, eventId, bookedAt, lines, BookingStatus.AWAITING_PAYMENT, paymentClientSecret);
+    }
+
+    /** Réservation abandonnée avant paiement (paiement impossible, délai dépassé) : ses places doivent être rendues. */
+    public Booking expire() {
+        if (status != BookingStatus.RESERVED && status != BookingStatus.AWAITING_PAYMENT) {
+            throw new IllegalStateException("Réservation " + id + " : passage " + status + " -> EXPIRED impossible");
+        }
+        return new Booking(id, userId, eventId, bookedAt, lines, BookingStatus.EXPIRED, clientSecret);
+    }
+
     private Booking from(BookingStatus expected, BookingStatus next) {
         if (status != expected) {
             throw new IllegalStateException("Réservation " + id + " : passage " + status + " -> " + next + " impossible");

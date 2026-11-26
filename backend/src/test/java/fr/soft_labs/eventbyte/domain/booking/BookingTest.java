@@ -59,6 +59,32 @@ class BookingTest {
     }
 
     @Test
+    void passe_en_awaiting_payment_depuis_reserved_avec_le_client_secret() {
+        Booking awaiting = requested(new BookingLine("a", "S", 1, 100)).reserve().awaitPayment("pi_1_secret_x");
+
+        assertThat(awaiting.status()).isEqualTo(BookingStatus.AWAITING_PAYMENT);
+        assertThat(awaiting.clientSecret()).isEqualTo("pi_1_secret_x");
+    }
+
+    @Test
+    void le_paiement_exige_une_reservation_reserved_et_un_client_secret() {
+        Booking requested = requested(new BookingLine("a", "S", 1, 100));
+
+        assertThatThrownBy(() -> requested.awaitPayment("pi_1_secret_x")).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> requested.reserve().awaitPayment(" ")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void expire_depuis_reserved_ou_awaiting_payment_seulement() {
+        Booking reserved = requested(new BookingLine("a", "S", 1, 100)).reserve();
+
+        assertThat(reserved.expire().status()).isEqualTo(BookingStatus.EXPIRED);
+        assertThat(reserved.awaitPayment("pi_1_secret_x").expire().status()).isEqualTo(BookingStatus.EXPIRED);
+        assertThatThrownBy(() -> requested(new BookingLine("a", "S", 1, 100)).reject().expire())
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     void sait_a_qui_elle_appartient() {
         Booking booking = requested(new BookingLine("a", "S", 1, 100));
 

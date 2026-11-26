@@ -6,6 +6,7 @@ import fr.soft_labs.eventbyte.ports.in.LikeEvent;
 import fr.soft_labs.eventbyte.ports.in.ListLikedEvents;
 import fr.soft_labs.eventbyte.ports.in.RequestBooking;
 import fr.soft_labs.eventbyte.ports.in.SearchEvents;
+import fr.soft_labs.eventbyte.ports.in.StartPayment;
 import fr.soft_labs.eventbyte.ports.in.UnlikeEvent;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
@@ -13,6 +14,7 @@ import fr.soft_labs.eventbyte.ports.out.EventRepository;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
 import fr.soft_labs.eventbyte.usecases.GetEventsByIdsUseCase;
 import fr.soft_labs.eventbyte.ports.out.LikeRepository;
+import fr.soft_labs.eventbyte.ports.out.PaymentGateway;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
@@ -20,6 +22,7 @@ import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
 import fr.soft_labs.eventbyte.usecases.ListLikedEventsUseCase;
 import fr.soft_labs.eventbyte.usecases.RequestBookingUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
+import fr.soft_labs.eventbyte.usecases.StartPaymentUseCase;
 import fr.soft_labs.eventbyte.usecases.UnlikeEventUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -71,9 +74,15 @@ public class UseCaseConfig {
     }
 
     @Bean
+    StartPayment startPayment(BookingRepository bookingRepository, PaymentGateway paymentGateway,
+                              TicketStock ticketStock) {
+        return new StartPaymentUseCase(bookingRepository, paymentGateway, ticketStock);
+    }
+
+    @Bean
     RequestBooking requestBooking(TicketCatalog ticketCatalog, TicketStock ticketStock,
-                                  BookingRepository bookingRepository, Clock clock) {
+                                  BookingRepository bookingRepository, Clock clock, StartPayment startPayment) {
         return new RequestBookingUseCase(ticketCatalog, ticketStock, bookingRepository,
-                () -> UUID.randomUUID().toString(), clock);
+                () -> UUID.randomUUID().toString(), clock, startPayment);
     }
 }

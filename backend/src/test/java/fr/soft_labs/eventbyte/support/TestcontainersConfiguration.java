@@ -3,6 +3,7 @@ package fr.soft_labs.eventbyte.support;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -15,6 +16,7 @@ import org.testcontainers.utility.DockerImageName;
  * Usage : {@code @SpringBootTest @Import(TestcontainersConfiguration.class)}.
  */
 @TestConfiguration(proxyBeanMethods = false)
+@Import(FakePaymentConfiguration.class)   // aucun test d'intégration n'appelle Stripe
 public class TestcontainersConfiguration {
 
     @Bean
