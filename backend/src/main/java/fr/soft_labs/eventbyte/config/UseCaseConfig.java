@@ -54,7 +54,8 @@ public class UseCaseConfig {
     GetEventsByIds getEventsByIds(EventReadModel eventReadModel) {
         return new GetEventsByIdsUseCase(eventReadModel);
     }
-    
+
+    @Bean
     LikeEvent likeEvent(EventRepository eventRepository, LikeRepository likeRepository) {
         return new LikeEventUseCase(eventRepository, likeRepository);
     }
