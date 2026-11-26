@@ -80,7 +80,9 @@ class StrapiIngestionIntegrationTest {
                 [{ "id": "tkt_1", "name": "Early", "quantity": 80, "price": 25.00 },
                  { "id": "tkt_2", "name": "VIP", "quantity": 10, "price": 90.00 }]"""));
 
-        await().atMost(Duration.ofSeconds(10)).untilAsserted(() ->
+        // ignoreExceptions : tant que le premier message n'est pas traité, la ligne n'existe pas encore
+        // et queryForObject lève une exception (pas une AssertionError, qu'awaitility réessaierait seul)
+        await().atMost(Duration.ofSeconds(10)).ignoreExceptions().untilAsserted(() ->
                 assertThat(jdbc.queryForObject("select title from events where id = 'evt_it'", String.class)).isEqualTo("Concert v2"));
         assertThat(count("select count(*) from events")).isEqualTo(1);
         assertThat(count("select count(*) from tickets where event_id = 'evt_it'")).isEqualTo(2);

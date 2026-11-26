@@ -59,9 +59,9 @@ class RedisTicketStock implements TicketStock {
                 select sum(l.quantity)
                 from booking_lines l join bookings b on b.id = l.booking_id
                 where l.ticket_id = t.id
-                  -- REQUESTED compte aussi : une réservation en cours a pu prendre le stock Redis
-                  -- sans être encore enregistrée en RESERVED. Au pire on sous-estime un instant, jamais de survente.
-                  and b.status in ('REQUESTED', 'RESERVED', 'AWAITING_PAYMENT', 'CONFIRMED')
+                  -- Pas REQUESTED : la réservation est enregistrée en REQUESTED avant de prendre le stock,
+                  -- elle se retirerait ses propres places (et celles des demandes concurrentes non servies).
+                  and b.status in ('RESERVED', 'AWAITING_PAYMENT', 'CONFIRMED')
             ), 0)
             from tickets t
             where t.id = ?
