@@ -1,6 +1,7 @@
 package fr.soft_labs.eventbyte.config;
 
 import fr.soft_labs.eventbyte.ports.in.ConfirmPayment;
+import fr.soft_labs.eventbyte.ports.in.ExpireUnpaidBookings;
 import fr.soft_labs.eventbyte.ports.in.GetEventById;
 import fr.soft_labs.eventbyte.ports.in.DiscoverEvents;
 import fr.soft_labs.eventbyte.ports.in.GetEventTickets;
@@ -22,6 +23,7 @@ import fr.soft_labs.eventbyte.ports.out.ProcessedPayments;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.ConfirmPaymentUseCase;
+import fr.soft_labs.eventbyte.usecases.ExpireUnpaidBookingsUseCase;
 import fr.soft_labs.eventbyte.usecases.GetEventByIdUseCase;
 import fr.soft_labs.eventbyte.usecases.DiscoverEventsUseCase;
 import fr.soft_labs.eventbyte.usecases.GetEventTicketsUseCase;
@@ -33,10 +35,12 @@ import fr.soft_labs.eventbyte.usecases.RequestBookingUseCase;
 import fr.soft_labs.eventbyte.usecases.SearchEventsUseCase;
 import fr.soft_labs.eventbyte.usecases.StartPaymentUseCase;
 import fr.soft_labs.eventbyte.usecases.UnlikeEventUseCase;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.UUID;
 
 /**
@@ -115,5 +119,12 @@ public class UseCaseConfig {
     ConfirmPayment confirmPayment(BookingRepository bookingRepository, TicketStock ticketStock,
                                   PaymentGateway paymentGateway, ProcessedPayments processedPayments) {
         return new ConfirmPaymentUseCase(bookingRepository, ticketStock, paymentGateway, processedPayments);
+    }
+
+    @Bean
+    ExpireUnpaidBookings expireUnpaidBookings(BookingRepository bookingRepository, TicketStock ticketStock,
+                                              Clock clock,
+                                              @Value("${eventbyte.booking.expiration-delay:10m}") Duration expirationDelay) {
+        return new ExpireUnpaidBookingsUseCase(bookingRepository, ticketStock, clock, expirationDelay);
     }
 }

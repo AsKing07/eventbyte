@@ -46,6 +46,10 @@ class IngestEventUseCaseTest {
         }
 
         @Override
+        public void giveBackOnce(String bookingId, List<BookingLine> lines) {
+        }
+
+        @Override
         public void refresh(Collection<String> ticketIds) {
             refreshed.addAll(ticketIds);
         }

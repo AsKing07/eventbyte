@@ -4,7 +4,10 @@ import fr.soft_labs.eventbyte.domain.UserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -82,6 +85,22 @@ class BookingTest {
         assertThat(reserved.awaitPayment("pi_1_secret_x").expire().status()).isEqualTo(BookingStatus.EXPIRED);
         assertThatThrownBy(() -> requested(new BookingLine("a", "S", 1, 100)).reject().expire())
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void expire_a_l_echeance_avec_une_horloge_injectee() {
+        Booking awaiting = requested(new BookingLine("a", "S", 1, 100))
+                .reserve().awaitPayment("pi_secret");
+        Clock beforeDeadline = Clock.fixed(NOW.plus(Duration.ofMinutes(10)).minusNanos(1), ZoneOffset.UTC);
+        Clock atDeadline = Clock.fixed(NOW.plus(Duration.ofMinutes(10)), ZoneOffset.UTC);
+        Clock afterDeadline = Clock.fixed(NOW.plus(Duration.ofMinutes(10)).plusSeconds(1), ZoneOffset.UTC);
+
+        assertThat(awaiting.expireIfOverdue(beforeDeadline, Duration.ofMinutes(10))).isEmpty();
+        assertThat(awaiting.expireIfOverdue(atDeadline, Duration.ofMinutes(10)))
+                .get().extracting(Booking::status).isEqualTo(BookingStatus.EXPIRED);
+        assertThat(awaiting.expireIfOverdue(afterDeadline, Duration.ofMinutes(10)))
+                .get().extracting(Booking::status).isEqualTo(BookingStatus.EXPIRED);
+        assertThat(awaiting.confirm().expireIfOverdue(afterDeadline, Duration.ofMinutes(10))).isEmpty();
     }
 
     @Test

@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,6 +55,20 @@ class RedisTicketStock implements TicketStock {
             return 1
             """, Long.class);
 
+    /** Une reprise du job ne doit pas restituer deux fois les mêmes places. */
+    private static final RedisScript<Long> GIVE_BACK_ONCE = new DefaultRedisScript<>("""
+            if redis.call('EXISTS', KEYS[1]) == 1 then
+              return 0
+            end
+            for i = 2, #KEYS do
+              if redis.call('EXISTS', KEYS[i]) == 1 then
+                redis.call('INCRBY', KEYS[i], ARGV[i - 1])
+              end
+            end
+            redis.call('SET', KEYS[1], '1')
+            return 1
+            """, Long.class);
+
     private static final String AVAILABLE_FROM_DATABASE = """
             select t.quantity - coalesce((
                 select sum(l.quantity)
@@ -92,6 +107,14 @@ class RedisTicketStock implements TicketStock {
     @Override
     public void giveBack(List<BookingLine> lines) {
         redis.execute(GIVE_BACK, keys(lines), quantities(lines));
+    }
+
+    @Override
+    public void giveBackOnce(String bookingId, List<BookingLine> lines) {
+        List<String> scriptKeys = new ArrayList<>();
+        scriptKeys.add("stock:returned:booking:" + bookingId);
+        scriptKeys.addAll(keys(lines));
+        redis.execute(GIVE_BACK_ONCE, scriptKeys, quantities(lines));
     }
 
     @Override

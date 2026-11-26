@@ -24,6 +24,9 @@ public interface TicketStock {
     /** Remet en vente les quantités (réservation expirée, échec technique après prise du stock). */
     void giveBack(List<BookingLine> lines);
 
+    /** Restitution idempotente, rejouable après une interruption du traitement d'expiration. */
+    void giveBackOnce(String bookingId, List<BookingLine> lines);
+
     /**
      * Le stock total de ces tickets a pu changer dans Strapi (EB-30) : le stock disponible
      * sera recalculé depuis la base à la prochaine réservation.

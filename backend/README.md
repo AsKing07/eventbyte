@@ -75,6 +75,7 @@ Le détail et les preuves sont dans les tickets Jira `decision-spec`.
 | Quantité modifiée dans Strapi (EB-30) | — | Le stock Redis gardait l'ancienne valeur : survente possible si l'organisateur baisse la quantité | À chaque `event.updated`, les clés Redis des tickets sont supprimées puis recalculées depuis la base ; sous le déjà-réservé : disponible 0, rien n'est annulé |
 | Paiement (US-16) | Pas de route « payer » côté backend | Le front affiche Stripe dès que la réservation est en `awaiting-payment` avec un `clientSecret` | `POST /bookings` enchaîne réservation puis PaymentIntent (montant = tickets + frais, en centimes, devise EUR) ; clé d'idempotence = id de réservation ; si Stripe échoue : places rendues, réservation `expired`, réponse 503 |
 | Paiement après expiration (EB-33) | — | Stripe peut confirmer un paiement après l'expiration de la réservation | On reprend les places si elles sont encore libres (réservation confirmée), sinon remboursement automatique (réservation reste `expired`). Un même paiement n'est traité qu'une fois (table `processed_payments`) |
+| Expiration des réservations impayées (US-14) | Délai décidé par le groupe | Le frontend affichait déjà un compte à rebours de 10 min, mais le backend n'expirait pas les réservations automatiquement | Délai backend de 10 min depuis `booked_at`, balayage toutes les 30 s. Le job ne traite que `RESERVED` et `AWAITING_PAYMENT`, passe le statut à `EXPIRED` et restitue le stock Redis. Le balayage DB est la source de vérité ; un TTL Redis seul ne garantit ni la transition durable ni la restitution. Une expiration acquise en base est reprise après incident, et la restitution Redis est idempotente. |
 | Coordonnées du lieu | Utilisées pour la recherche géographique | Facultatives dans Strapi : le hook plante (`reading 'lat'`) et aucun message n'est envoyé | Toujours renseigner la position ; correction possible : `required: true` dans `venue.json` |
 | Ordre des messages | — | L'outbox Strapi n'a pas d'`ORDER BY` et republie les échecs plus tard | Ingestion idempotente ; un événement supprimé ne revient pas |
 | Messages publiés avant le 1er démarrage du backend | — | Exchange topic sans file : messages perdus | Démarrer le backend avant le seed ; rejeu possible via `strapi.outbox_events` |
@@ -84,3 +85,23 @@ Rejouer tous les messages Strapi (environnement de dev) :
 ```
 docker compose exec postgres psql -U root -d eventbyte -c "truncate public.tickets, public.events; update strapi.outbox_events set processed_at = null;"
 ```
+
+### Expiration des réservations impayées (US-14)
+
+Une réservation en `RESERVED` ou `AWAITING_PAYMENT` expire 10 minutes après `booked_at`.
+Le scheduler backend balaie les réservations échues toutes les 30 secondes : l'expiration effective
+est donc appliquée au prochain passage du job, avec un retard maximal nominal d'environ 30 secondes.
+La règle métier est testable avec une `Clock` injectée ; elle ne dépend pas du compte à rebours du navigateur.
+
+La transition en base est conditionnelle au statut et à l'échéance pour ne pas écraser une confirmation
+de paiement concurrente. Le retour des places est idempotent dans Redis ; si le processus s'arrête après
+la transition en base, le prochain balayage reprend les restitutions qui restent à faire.
+
+Configuration (`backend/src/main/resources/application.yml`) :
+
+- `BOOKING_EXPIRATION_DELAY` : durée avant expiration, défaut `10m`.
+- `BOOKING_EXPIRATION_SCAN_INTERVAL` : fréquence du balayage, défaut `30s`.
+
+Le délai de 10 minutes correspond aussi au compte à rebours du frontend. La fréquence retenue est
+30 secondes, conformément à la décision technique US-14 ; toute consigne de fréquence de 30 minutes
+doit être clarifiée avant de modifier cette valeur.

@@ -2,10 +2,13 @@ package fr.soft_labs.eventbyte.domain.booking;
 
 import fr.soft_labs.eventbyte.domain.UserId;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -92,6 +95,20 @@ public record Booking(String id,
             throw new IllegalStateException("Réservation " + id + " : passage " + status + " -> EXPIRED impossible");
         }
         return new Booking(id, userId, eventId, bookedAt, lines, BookingStatus.EXPIRED, clientSecret);
+    }
+
+    /** Expire une réservation payable dès que son délai est atteint. */
+    public Optional<Booking> expireIfOverdue(Clock clock, Duration expirationDelay) {
+        Objects.requireNonNull(clock, "L'horloge est obligatoire");
+        Objects.requireNonNull(expirationDelay, "Le délai d'expiration est obligatoire");
+        if (expirationDelay.isNegative() || expirationDelay.isZero()) {
+            throw new IllegalArgumentException("Le délai d'expiration doit être positif");
+        }
+        if ((status != BookingStatus.RESERVED && status != BookingStatus.AWAITING_PAYMENT)
+                || clock.instant().isBefore(bookedAt.plus(expirationDelay))) {
+            return Optional.empty();
+        }
+        return Optional.of(expire());
     }
 
     private Booking from(BookingStatus expected, BookingStatus next) {

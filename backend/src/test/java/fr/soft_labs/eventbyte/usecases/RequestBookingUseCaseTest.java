@@ -18,9 +18,11 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,6 +49,7 @@ class RequestBookingUseCaseTest {
     /** Faux stock : tout ou rien, comme le script Redis. */
     static class FakeStock implements TicketStock {
         final Map<String, Integer> available = new HashMap<>();
+        final Set<String> returnedBookings = new HashSet<>();
 
         @Override
         public boolean tryTake(List<BookingLine> lines) {
@@ -68,6 +71,13 @@ class RequestBookingUseCaseTest {
         }
 
         @Override
+        public void giveBackOnce(String bookingId, List<BookingLine> lines) {
+            if (returnedBookings.add(bookingId)) {
+                giveBack(lines);
+            }
+        }
+
+        @Override
         public void refresh(Collection<String> ticketIds) {
         }
     }
@@ -76,6 +86,7 @@ class RequestBookingUseCaseTest {
     static class RecordingRepository implements BookingRepository {
         final List<BookingStatus> savedStatuses = new ArrayList<>();
         final Map<String, Booking> bookings = new HashMap<>();
+        final Set<String> stockReturnPending = new HashSet<>();
         boolean failOnReserved;
         boolean failOnSave;
 
@@ -91,6 +102,50 @@ class RequestBookingUseCaseTest {
         @Override
         public Optional<Booking> findById(String bookingId) {
             return Optional.ofNullable(bookings.get(bookingId));
+        }
+
+        @Override
+        public List<Booking> findUnpaidBookingsPastDeadline(Instant cutoff) {
+            return bookings.values().stream()
+                    .filter(b -> (b.status() == BookingStatus.RESERVED || b.status() == BookingStatus.AWAITING_PAYMENT)
+                            && !b.bookedAt().isAfter(cutoff))
+                    .toList();
+        }
+
+        @Override
+        public int expireIfUnpaidAndBookedBefore(String bookingId, Instant cutoff, Instant updatedAt) {
+            Booking booking = bookings.get(bookingId);
+            if (booking == null || booking.bookedAt().isAfter(cutoff)
+                    || booking.status() != BookingStatus.RESERVED && booking.status() != BookingStatus.AWAITING_PAYMENT) {
+                return 0;
+            }
+            bookings.put(bookingId, booking.expire());
+            stockReturnPending.add(bookingId);
+            return 1;
+        }
+
+        @Override
+        public List<Booking> findExpiredBookingsPendingStockReturn() {
+            return stockReturnPending.stream().map(bookings::get).toList();
+        }
+
+        @Override
+        public void markStockReturned(String bookingId) {
+            stockReturnPending.remove(bookingId);
+        }
+
+        @Override
+        public boolean updateIfStatus(Booking booking, BookingStatus expectedStatus) {
+            if (failOnSave) {
+                throw new IllegalStateException("base indisponible");
+            }
+            Booking current = bookings.get(booking.id());
+            if (current == null || current.status() != expectedStatus) {
+                return false;
+            }
+            savedStatuses.add(booking.status());
+            bookings.put(booking.id(), booking);
+            return true;
         }
     }
 
