@@ -22,6 +22,7 @@
         <meilisearch-java.version>0.17.1</meilisearch-java.version>
         <archunit.version>1.4.1</archunit.version>
         <okhttp.version>4.12.0</okhttp.version>
+        <stripe-java.version>33.3.0</stripe-java.version>
     </properties>
 
     <dependencies>
@@ -62,6 +63,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <!-- Paiement (US-16) -->
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>${stripe-java.version}</version>
         </dependency>
 
         <!-- Stock et expiration (Redis) -->

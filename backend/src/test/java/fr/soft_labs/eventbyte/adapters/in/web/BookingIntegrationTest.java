@@ -1,5 +1,6 @@
 package fr.soft_labs.eventbyte.adapters.in.web;
 
+import fr.soft_labs.eventbyte.support.FakePaymentConfiguration;
 import fr.soft_labs.eventbyte.support.TestcontainersConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,9 +76,9 @@ class BookingIntegrationTest {
         String second = book(2);   // il ne reste qu'une place
         String third = book(1);
 
-        assertThat(statusOf(first)).isEqualTo("RESERVED");
+        assertThat(statusOf(first)).isEqualTo("AWAITING_PAYMENT");
         assertThat(statusOf(second)).isEqualTo("REJECTED");
-        assertThat(statusOf(third)).isEqualTo("RESERVED");
+        assertThat(statusOf(third)).isEqualTo("AWAITING_PAYMENT");
         assertThat(redis.opsForValue().get("stock:ticket:" + ticketId)).isEqualTo("0");
     }
 
@@ -91,6 +92,13 @@ class BookingIntegrationTest {
     }
 
     @Test
+    void la_reservation_attend_le_paiement_avec_le_client_secret_stripe() throws Exception {
+        String id = book(2);
+
+        assertThat(statusOf(id)).isEqualTo("AWAITING_PAYMENT");
+        assertThat(jdbc.queryForObject("select client_secret from bookings where id = ?", String.class, id))
+                .isEqualTo(FakePaymentConfiguration.clientSecretFor(id));
+    }
     void la_route_tickets_publique_reflete_les_reservations_deja_prises() throws Exception {
         book(2);
 

@@ -59,6 +59,12 @@ eventbyte:
     # File du backend ; les messages rejetés vont dans <file>.dlq
     events-queue: eventbyte.events
 
+stripe:
+  # Clé secrète Stripe (sk_test_...) : uniquement par variable d'environnement, jamais dans le dépôt.
+  # Vide : l'application démarre, mais toute réservation échoue avec 503 au moment du paiement.
+  secret-key: ${STRIPE_SECRET_KEY:}
+  currency: eur
+
 meilisearch:
   host: ${MEILISEARCH_HOST:http://localhost:7700}
   # Clé maître définie dans docker-compose.yml (MEILI_MASTER_KEY)
