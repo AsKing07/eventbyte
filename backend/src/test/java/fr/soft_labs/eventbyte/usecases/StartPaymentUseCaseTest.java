@@ -27,6 +27,7 @@ class StartPaymentUseCaseTest {
         record Call(String bookingId, long amountInCents) {}
 
         final List<Call> calls = new ArrayList<>();
+        final List<String> refunds = new ArrayList<>();
         RuntimeException failure;
 
         @Override
@@ -36,6 +37,11 @@ class StartPaymentUseCaseTest {
                 throw failure;
             }
             return "pi_" + bookingId + "_secret_test";
+        }
+
+        @Override
+        public void refund(String paymentIntentId) {
+            refunds.add(paymentIntentId);
         }
     }
 

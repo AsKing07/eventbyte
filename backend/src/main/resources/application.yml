@@ -63,6 +63,8 @@ stripe:
   # Clé secrète Stripe (sk_test_...) : uniquement par variable d'environnement, jamais dans le dépôt.
   # Vide : l'application démarre, mais toute réservation échoue avec 503 au moment du paiement.
   secret-key: ${STRIPE_SECRET_KEY:}
+  # Secret de signature du webhook (whsec_...) : affiché par `stripe listen`, ou dans le dashboard pour un endpoint déployé
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
   currency: eur
 
 meilisearch:
