@@ -53,7 +53,14 @@ public class StartPaymentUseCase implements StartPayment {
 
         // Si cet enregistrement échoue, la réservation reste reserved : l'expiration (US-14) rendra les places.
         Booking awaiting = booking.awaitPayment(clientSecret);
-        bookings.save(awaiting);
-        return awaiting;
+        if (bookings.updateIfStatus(awaiting, BookingStatus.RESERVED)) {
+            return awaiting;
+        }
+        return bookings.findById(bookingId)
+                .filter(current -> current.status() == BookingStatus.AWAITING_PAYMENT
+                        || current.status() == BookingStatus.EXPIRED
+                        || current.status() == BookingStatus.CONFIRMED)
+                .orElseThrow(() -> new IllegalStateException(
+                        "La réservation " + bookingId + " a changé d'état pendant la création du paiement"));
     }
 }

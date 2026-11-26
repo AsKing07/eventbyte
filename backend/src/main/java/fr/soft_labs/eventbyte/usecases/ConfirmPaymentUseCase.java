@@ -56,8 +56,12 @@ public class ConfirmPaymentUseCase implements ConfirmPayment {
     private PaymentOutcome handle(Booking booking, String paymentIntentId) {
         return switch (booking.status()) {
             case RESERVED, AWAITING_PAYMENT -> {
-                bookings.save(booking.confirm());   // les places sont déjà tenues
-                yield PaymentOutcome.CONFIRMED;
+                if (bookings.updateIfStatus(booking.confirm(), booking.status())) {
+                    yield PaymentOutcome.CONFIRMED;   // les places sont déjà tenues
+                }
+                Booking current = bookings.findById(booking.id())
+                        .orElseThrow(() -> new IllegalStateException("Réservation disparue : " + booking.id()));
+                yield handle(current, paymentIntentId);
             }
             case CONFIRMED -> PaymentOutcome.ALREADY_PROCESSED;
             case EXPIRED -> confirmLateOrRefund(booking, paymentIntentId);

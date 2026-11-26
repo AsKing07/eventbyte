@@ -40,6 +40,9 @@ class BookingEntity {
     @Column(name = "client_secret")
     private String clientSecret;
 
+    @Column(name = "stock_returned", nullable = false)
+    private boolean stockReturned = true;
+
     @Column(name = "updated_at", nullable = false, columnDefinition = "timestamptz")
     private Instant updatedAt;
 
@@ -64,9 +67,11 @@ class BookingEntity {
     BookingStatus getStatus() { return status; }
     Instant getBookedAt() { return bookedAt; }
     String getClientSecret() { return clientSecret; }
+    boolean isStockReturned() { return stockReturned; }
     List<BookingLineEmbeddable> getLines() { return lines; }
 
     void setStatus(BookingStatus status) { this.status = status; }
     void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
+    void setStockReturned(boolean stockReturned) { this.stockReturned = stockReturned; }
     void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }
