@@ -66,8 +66,8 @@ public class UseCaseConfig {
     }
 
     @Bean
-    GetEventById getEventById(GetEventsByIds getEventsByIds) {
-        return new GetEventByIdUseCase(getEventsByIds);
+    GetEventById getEventById(EventReadModel eventReadModel) {
+        return new GetEventByIdUseCase(eventReadModel);
     }
 
     @Bean
