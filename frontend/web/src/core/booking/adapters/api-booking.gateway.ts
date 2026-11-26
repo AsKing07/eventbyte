@@ -76,17 +76,17 @@ export class ApiBookingGateway implements BookingGateway {
     }
 
     subscribeToBookingChanges(callback: OnBookingChangeCallback): () => void {
-        const token = this.getToken()
-
         const eventSource = new EventSource(`${this.apiUrl}/bookings/stream`, {
-            fetch: (input, init) =>
-                fetch(input, {
-                    ...init,
-                    headers: {
-                        ...init.headers,
-                        Authorization: `Bearer ${token}`,
-                    },
-                }),
+            fetch: (input, init) => {
+                const headers = new Headers(init?.headers)
+                const token = this.getToken()
+                if (token) {
+                    headers.set("Authorization", `Bearer ${token}`)
+                } else {
+                    headers.delete("Authorization")
+                }
+                return fetch(input, { ...init, headers })
+            },
         })
 
         eventSource.addEventListener('booking_updated', (event) => {
@@ -101,8 +101,7 @@ export class ApiBookingGateway implements BookingGateway {
         })
 
         eventSource.addEventListener('error', (error) => {
-            console.error('SSE connection error:', error)
-            eventSource.close()
+            console.warn('SSE connection interrupted; EventSource will retry:', error)
         })
 
         return () => {

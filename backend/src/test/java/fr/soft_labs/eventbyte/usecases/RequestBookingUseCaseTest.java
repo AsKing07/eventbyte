@@ -152,6 +152,7 @@ class RequestBookingUseCaseTest {
     FakeStock stock;
     RecordingRepository repository;
     StartPaymentUseCaseTest.FakePaymentGateway payments;
+    BookingUpdatesUseCase bookingUpdates;
     RequestBookingUseCase useCase;
 
     @BeforeEach
@@ -163,8 +164,9 @@ class RequestBookingUseCaseTest {
         stock.available.putAll(Map.of("tkt_std", 80, "tkt_vip", 1, "tkt_lyon", 500));
         repository = new RecordingRepository();
         payments = new StartPaymentUseCaseTest.FakePaymentGateway();
+        bookingUpdates = new BookingUpdatesUseCase();
         useCase = new RequestBookingUseCase(catalog, stock, repository, () -> "bk_1", Clock.fixed(NOW, ZoneOffset.UTC),
-                new StartPaymentUseCase(repository, payments, stock));
+                new StartPaymentUseCase(repository, payments, stock, bookingUpdates), bookingUpdates);
     }
 
     @Test

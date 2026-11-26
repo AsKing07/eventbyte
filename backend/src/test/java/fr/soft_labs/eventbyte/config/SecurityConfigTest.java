@@ -46,7 +46,8 @@ class SecurityConfigTest {
             "POST,   /events/evt_1/like",
             "DELETE, /events/evt_1/like",
             "POST,   /bookings",
-            "GET,    /bookings/user"
+            "GET,    /bookings/user",
+            "GET,    /bookings/stream"
     })
     void route_authentifiee_sans_token_renvoie_401(String method, String path) throws Exception {
         mvc.perform(request(HttpMethod.valueOf(method), path))
@@ -67,7 +68,8 @@ class SecurityConfigTest {
             "POST,   /events/evt_1/like",
             "DELETE, /events/evt_1/like",
             "POST,   /bookings",
-            "GET,    /bookings/user"
+            "GET,    /bookings/user",
+            "GET,    /bookings/stream"
     })
     void route_authentifiee_avec_token_utilise_le_sub(String method, String path) throws Exception {
         mvc.perform(request(HttpMethod.valueOf(method), path).with(jwt().jwt(j -> j.subject("user-123"))))

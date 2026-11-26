@@ -3,6 +3,7 @@ package fr.soft_labs.eventbyte.usecases;
 import fr.soft_labs.eventbyte.domain.booking.Booking;
 import fr.soft_labs.eventbyte.domain.booking.PaymentOutcome;
 import fr.soft_labs.eventbyte.ports.in.ConfirmPayment;
+import fr.soft_labs.eventbyte.ports.out.BookingUpdatePublisher;
 import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.PaymentGateway;
 import fr.soft_labs.eventbyte.ports.out.ProcessedPayments;
@@ -25,13 +26,15 @@ public class ConfirmPaymentUseCase implements ConfirmPayment {
     private final TicketStock stock;
     private final PaymentGateway payments;
     private final ProcessedPayments processed;
+    private final BookingUpdatePublisher bookingUpdates;
 
     public ConfirmPaymentUseCase(BookingRepository bookings, TicketStock stock, PaymentGateway payments,
-                                 ProcessedPayments processed) {
+                                 ProcessedPayments processed, BookingUpdatePublisher bookingUpdates) {
         this.bookings = Objects.requireNonNull(bookings);
         this.stock = Objects.requireNonNull(stock);
         this.payments = Objects.requireNonNull(payments);
         this.processed = Objects.requireNonNull(processed);
+        this.bookingUpdates = Objects.requireNonNull(bookingUpdates);
     }
 
     @Override
@@ -56,7 +59,9 @@ public class ConfirmPaymentUseCase implements ConfirmPayment {
     private PaymentOutcome handle(Booking booking, String paymentIntentId) {
         return switch (booking.status()) {
             case RESERVED, AWAITING_PAYMENT -> {
-                if (bookings.updateIfStatus(booking.confirm(), booking.status())) {
+                Booking confirmed = booking.confirm();
+                if (bookings.updateIfStatus(confirmed, booking.status())) {
+                    bookingUpdates.publish(confirmed);
                     yield PaymentOutcome.CONFIRMED;   // les places sont déjà tenues
                 }
                 Booking current = bookings.findById(booking.id())
@@ -76,7 +81,9 @@ public class ConfirmPaymentUseCase implements ConfirmPayment {
     private PaymentOutcome confirmLateOrRefund(Booking expired, String paymentIntentId) {
         if (stock.tryTake(expired.lines())) {
             try {
-                bookings.save(expired.confirmLate());
+                Booking confirmed = expired.confirmLate();
+                bookings.save(confirmed);
+                bookingUpdates.publish(confirmed);
             } catch (RuntimeException e) {
                 stock.giveBack(expired.lines());
                 throw e;

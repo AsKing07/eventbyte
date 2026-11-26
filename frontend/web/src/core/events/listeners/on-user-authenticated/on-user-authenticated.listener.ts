@@ -5,15 +5,19 @@ import { loadLikedEvents } from "../../usecases/load-liked-events/load-liked-eve
 import { bookingChanged } from "@/core/booking/booking.slice";
 
 export const onUserAuthenticated = (listener: ListenerMiddlewareInstance<RootState, AppDispatch, Dependencies>,) => {
+    let unsubscribeBookingUpdates: (() => void) | undefined
+
     listener.startListening({
         matcher: isAnyOf(userAuthenticated),
         effect: (action: ReturnType<typeof userAuthenticated>, { dispatch, extra }) => {
+            unsubscribeBookingUpdates?.()
+            unsubscribeBookingUpdates = undefined
             if (!action.payload) {
                 return
             }
             dispatch(loadLikedEvents())
 
-            extra.bookingGateway.subscribeToBookingChanges((booking) => {
+            unsubscribeBookingUpdates = extra.bookingGateway.subscribeToBookingChanges((booking) => {
                 dispatch(bookingChanged(booking))
             })
         }
