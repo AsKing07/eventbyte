@@ -1,6 +1,7 @@
 package fr.soft_labs.eventbyte.config;
 
 import fr.soft_labs.eventbyte.ports.in.ConfirmPayment;
+import fr.soft_labs.eventbyte.ports.in.GetEventById;
 import fr.soft_labs.eventbyte.ports.in.GetEventTickets;
 import fr.soft_labs.eventbyte.ports.in.GetEventsByIds;
 import fr.soft_labs.eventbyte.ports.in.IngestEvent;
@@ -14,14 +15,15 @@ import fr.soft_labs.eventbyte.ports.out.BookingRepository;
 import fr.soft_labs.eventbyte.ports.out.EventReadModel;
 import fr.soft_labs.eventbyte.ports.out.EventRepository;
 import fr.soft_labs.eventbyte.ports.out.EventSearchIndex;
-import fr.soft_labs.eventbyte.usecases.GetEventsByIdsUseCase;
 import fr.soft_labs.eventbyte.ports.out.LikeRepository;
 import fr.soft_labs.eventbyte.ports.out.PaymentGateway;
 import fr.soft_labs.eventbyte.ports.out.ProcessedPayments;
 import fr.soft_labs.eventbyte.ports.out.TicketCatalog;
 import fr.soft_labs.eventbyte.ports.out.TicketStock;
 import fr.soft_labs.eventbyte.usecases.ConfirmPaymentUseCase;
+import fr.soft_labs.eventbyte.usecases.GetEventByIdUseCase;
 import fr.soft_labs.eventbyte.usecases.GetEventTicketsUseCase;
+import fr.soft_labs.eventbyte.usecases.GetEventsByIdsUseCase;
 import fr.soft_labs.eventbyte.usecases.IngestEventUseCase;
 import fr.soft_labs.eventbyte.usecases.LikeEventUseCase;
 import fr.soft_labs.eventbyte.usecases.ListLikedEventsUseCase;
@@ -61,6 +63,11 @@ public class UseCaseConfig {
     @Bean
     GetEventsByIds getEventsByIds(EventReadModel eventReadModel) {
         return new GetEventsByIdsUseCase(eventReadModel);
+    }
+
+    @Bean
+    GetEventById getEventById(GetEventsByIds getEventsByIds) {
+        return new GetEventByIdUseCase(getEventsByIds);
     }
 
     @Bean

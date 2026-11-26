@@ -151,10 +151,12 @@ Array<{
   },
   isSoldOut: boolean,
   startAt: string,
-  lowestPrice: number,
+  lowestPrice: number,        // Prix le plus bas en euros
   description: string
 }
 ```
+
+**Réponse:** `404 Not Found` si l’événement est introuvable, supprimé ou sans date de début.
 
 ---
 
