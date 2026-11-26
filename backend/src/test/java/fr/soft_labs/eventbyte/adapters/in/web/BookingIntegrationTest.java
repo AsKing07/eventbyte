@@ -18,6 +18,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** US-12 de bout en bout : POST /bookings -> Redis (stock) -> Postgres (statut). Docker requis, sinon ignoré. */
@@ -86,5 +88,16 @@ class BookingIntegrationTest {
         assertThat(jdbc.queryForObject("select user_id from bookings where id = ?", String.class, id)).isEqualTo("alice");
         assertThat(jdbc.queryForObject("select unit_price from booking_lines where booking_id = ?", Long.class, id))
                 .isEqualTo(1500L);
+    }
+
+    @Test
+    void la_route_tickets_publique_reflete_les_reservations_deja_prises() throws Exception {
+        book(2);
+
+        mvc.perform(get("/events/" + eventId + "/tickets"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$[0].id").value(ticketId))
+           .andExpect(jsonPath("$[0].price").value(15.0))
+           .andExpect(jsonPath("$[0].quantity").value(1));
     }
 }

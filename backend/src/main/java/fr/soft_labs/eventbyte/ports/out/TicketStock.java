@@ -17,6 +17,9 @@ public interface TicketStock {
      */
     boolean tryTake(List<BookingLine> lines);
 
+    /** Nombre de places pouvant encore être réservées pour ce ticket. */
+    int available(String ticketId);
+
     /** Remet en vente les quantités (réservation expirée, échec technique après prise du stock). */
     void giveBack(List<BookingLine> lines);
 }
